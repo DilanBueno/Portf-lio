@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f680.png" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Portfólio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+TC&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+</head>
+<body>
+    <!--
+    <div class="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Carregando...</div>
+    </div>
+    -->
+    <canvas id="spaceCanvas"></canvas>
+    <header class="header-container">
+        <div class="profile-section">
+            <img src="images/foto de perfil 3.png" alt="Foto de Dilan B." class="profile-pic">
+            <h1 class="profile-name">Dilan B.</h1>
+        </div>
+        <nav class="nav-menu">
+            <ul>
+                <li><a href="#inicio">Início</a></li>
+                <li><a href="#sobre">Sobre Mim</a></li>
+                <li><a href="#projetos">Projetos</a></li>
+                <li><a href="#contato"></a></li>
+            </ul>
+        </nav>
+        <div class="hal-button">
+            <div class="hal-eye"></div>
+            <span class="hal-tooltip">HAL 9000 AI</span>
+        </div>
+        <button class="menu-toggle">
+            <span class="hamburger"></span>
+        </button>
+        <button class="close-button" aria-label="Fechar menu"></button>
+    </header>
+
+    <section class="portfolio-title">
+        <div id="rocket-container"></div>
+        <h1 class="glowing-text">Portfolio</h1>
+    </section>
+
+    <br><br><br><br><br><br><br><br><br><br>
+
+    <section id="sobre" class="about-section">
+        <div class="about-container">
+            <h2 class="about-title glowing-text">Sobre Mim</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>Sou desenvolvedor front-end com paixão por criar interfaces que vão além do óbvio. Acredito que tecnologia é mais do que funcionalidade — é também experiência, estética e inovação.</p>
+                    <p>Gosto de experimentar novas ideias, explorar soluções criativas e fugir do padrão sempre que possível. Para mim, cada projeto é uma oportunidade de construir algo único, que se destaque tanto pela forma quanto pelo conteúdo.</p>
+                    <p>Estou sempre em busca de aprendizado constante e desafios que me façam sair da zona de conforto. Se é diferente, ousado e tem espaço para inovação, pode contar comigo.</p>
+                </div>
+                <div class="about-skills">
+                    <div class="skills-header">
+                        <h3 class="tech-title">
+                            <span class="typing-text">Tecnologias com as quais trabalho</span>
+                        </h3>
+                    </div>
+                    <div class="skills-grid">
+                        <div class="skill-item" data-skill="HTML">
+                            <div class="skill-icon"><i class="fab fa-html5"></i></div>
+                            <span class="skill-name">HTML</span>
+                        </div>
+                        <div class="skill-item" data-skill="CSS">
+                            <div class="skill-icon"><i class="fab fa-css3-alt"></i></div>
+                            <span class="skill-name">CSS</span>
+                        </div>
+                        <div class="skill-item" data-skill="JavaScript">
+                            <div class="skill-icon"><i class="fab fa-js"></i></div>
+                            <span class="skill-name">JavaScript</span>
+                        </div>
+                        <div class="skill-item" data-skill="TypeScript">
+                            <div class="skill-icon">TS</div>
+                            <span class="skill-name">TypeScript</span>
+                        </div>
+                        <div class="skill-item" data-skill="React">
+                            <div class="skill-icon"><i class="fab fa-react"></i></div>
+                            <span class="skill-name">React.js</span>
+                        </div>
+                        <div class="skill-item" data-skill="Node">
+                            <div class="skill-icon"><i class="fab fa-node-js"></i></div>
+                            <span class="skill-name">Node.js</span>
+                        </div>
+                        <div class="skill-item" data-skill="ThreeJS">
+                            <div class="skill-icon">3D</div>
+                            <span class="skill-name">Three.js</span>
+                        </div>
+                        <div class="skill-item" data-skill="PHP">
+                            <div class="skill-icon"><i class="fab fa-php"></i></div>
+                            <span class="skill-name">PHP</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <br><br><br><br><br><br>
+
+    <section class="rotating-text-section">
+        <canvas id="futuristic-lines"></canvas>
+        <div class="rotating-text-wrapper">
+            <div class="rotating-text">
+                <span class="rotating-word">UX</span>
+                <span class="rotating-word">UI</span>
+                <span class="rotating-word">Design</span>
+                <span class="rotating-word">Flow</span>
+                <span class="rotating-word">Wireframe</span>
+                <span class="rotating-word">Teste</span>
+                <span class="rotating-word">Protótipo</span>
+                <span class="rotating-word">Jornada</span>
+                <span class="rotating-word">Layout</span>
+                <span class="rotating-word">Interação</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="projects-section" id="projetos">
+        <div class="container">
+            <h2 class="section-title">Meus Projetos</h2>
+            <ul class="projects-list">
+                <li class="project-item">
+                    <div class="initial-letter-container">
+                        <span class="initial-letter">P</span>
+                    </div>
+                    <div class="project-content">
+                        <h3>Dashboard</h3>
+                        <p>Dashboard interativo desenvolvido para visualização intuitiva de dados em tempo real, com foco em usabilidade, performance e design responsivo.</p>
+                        <a href="/projetos/projeto1.html" class="project-link">Ver projeto</a>
+                    </div>
+                    <img src="images/capaprojetos/projeto1.png" class="project-image" alt="Projeto 1">
+                </li>
+                <li class="project-item">
+                    <div class="initial-letter-container">
+                        <span class="initial-letter">R</span>
+                    </div>
+                    <div class="project-content">
+                        <h3>e-commerce</h3>
+                        <p>Loja virtual desenvolvida com foco em performance, responsividade e uma experiência de usuário fluida</p>
+                        <a href="/projetos/projeto2.html" class="project-link">Ver projeto</a>
+                    </div>
+                    <img src="images/capaprojetos/projeto2.png" class="project-image" alt="Projeto 2">
+                </li>
+                <li class="project-item">
+                    <div class="initial-letter-container">
+                        <span class="initial-letter">O</span>
+                    </div>
+                    <div class="project-content">
+                        <h3>Sistema de agendamento</h3>
+                        <p>Organize seus compromissos, tarefas e metas em um só lugar com praticidade, clareza e controle total do seu tempo.</p>
+                        <a href="/projetos/projeto3.html" class="project-link">Ver projeto</a>
+                    </div>
+                    <img src="images/capaprojetos/projeto3.png" class="project-image" alt="Projeto 3">
+                </li>
+                <li class="project-item">
+                    <div class="initial-letter-container">
+                        <span class="initial-letter">J</span>
+                    </div>
+                    <div class="project-content">
+                        <h3>site de streaming</h3>
+                        <p>Interface responsiva de plataforma de streaming</p>
+                        <a href="/projetos/projeto4.html" class="project-link">Ver projeto</a>
+                    </div>
+                    <img src="images/capaprojetos/projeto4.png" class="project-image" alt="Projeto 4">
+                </li>
+                <li class="project-item">
+                    <div class="initial-letter-container">
+                        <span class="initial-letter">E</span>
+                    </div>
+                    <div class="project-content">
+                        <h3>Chat AI</h3>
+                        <p>A interface do site de chat de IA é intuitiva e responsiva, permitindo uma interação fluida e acessível entre o usuário e a inteligência artificial.</p>
+                        <a href="/projetos/projeto5.html" class="project-link">Ver projeto</a>
+                    </div>
+                    <img src="images/capaprojetos/projeto5.png" class="project-image" alt="Projeto 5">
+                </li>
+                <li class="project-item">
+                    <div class="initial-letter-container">
+                        <span class="initial-letter">T</span>
+                    </div>
+                    <div class="project-content">
+                        <h3>Sistema Operacional</h3>
+                        <p>Sistema operacional web interativo feito com frontend para simular um desktop no navegador</p>
+                        <a href="/projetos/projeto6.html" class="project-link">Ver projeto</a>
+                    </div>
+                    <img src="images/capaprojetos/projeto6.png" class="project-image" alt="Projeto 6">
+                </li>
+                <li class="project-item">
+                    <div class="initial-letter-container">
+                        <span class="initial-letter">O</span>
+                    </div>
+                    <div class="project-content">
+                        <h3>Clone do Spotify</h3>
+                        <p>Clone do Spotify feito com design minimalista e clean</p>
+                        <a href="/projetos/projeto7.html" class="project-link">Ver projeto</a>
+                    </div>
+                    <img src="images/capaprojetos/projeto7.png" class="project-image" alt="Projeto 7">
+                </li>
+                <li class="project-item">
+                    <div class="initial-letter-container">
+                        <span class="initial-letter">S</span>
+                    </div>
+                    <div class="project-content">
+                        <h3>Clone do instagram</h3>
+                        <p>Clone do instagram</p>
+                        <a href="#" class="project-link">Ver projeto</a>
+                    </div>
+                    <img src="images/capaprojetos/projeto8.png" class="project-image" alt="Projeto 8">
+                </li>
+            </ul>
+        </div>
+    </section>
+    
+    <!-- E-mail tooltip simplificado -->
+    <div class="tooltip-container" style="position: fixed; bottom: 20px; right: 20px;">
+      <div class="tooltip">
+        <div class="email-display">
+          <span class="copy-email" onclick="navigator.clipboard.writeText('dilanbueno1512@gmail.com')">
+            dilanbueno1512@gmail.com
+            <i class="far fa-copy"></i>
+          </span>
+        </div>
+      </div>
+      <div class="text">
+        <a class="icon" href="#">
+          <div class="layer">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span class="emailSVG">
+              <svg
+                fill="white"
+                class="svgIcon"
+                viewBox="0 0 512 512"
+                height="1.5em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4L236.8 313.6c11.4 8.5 27 8.5 38.4 0L492.8 150.4c12.1-9.1 19.2-23.3 19.2-38.4c0-26.5-21.5-48-48-48H48zM0 176V384c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V176L294.4 339.2c-22.8 17.1-54 17.1-76.8 0L0 176z"
+                ></path>
+              </svg>
+            </span>
+          </div>
+        </a>
+      </div>
+    </div>
+    
+    <footer class="portfolio-footer">
+        <div class="footer-content">
+            <div class="footer-copyright">
+                <p>Todos os direitos reservados &copy; <script>document.write(new Date().getFullYear())</script> Dilan B.</p>
+            </div>
+            
+            <div class="footer-social">
+                <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+                <a href="#" class="social-link"><i class="fas fa-envelope"></i></a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
