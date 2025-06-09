@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Operacional Minimalista</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .window {
+            resize: both;
+            min-width: 300px;
+            min-height: 200px;
+        }
+        .draggable {
+            -webkit-user-select: none;
+            -webkit-app-region: drag;
+        }
+        .notepad-content {
+            -webkit-user-select: text;
+            resize: none;
+            height: calc(100% - 40px);
+        }
+        .browser-content {
+            height: calc(100% - 90px);
+        }
+        .terminal-line {
+            font-family: monospace;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555; 
+        }
+        
+        body {
+            background-image: url('https://images4.alphacoders.com/106/thumb-1920-106826.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        
+        /* Taskbar mais transparente */
+        .absolute.bottom-0 {
+            background-color: rgba(51, 51, 51, 0.5) !important;
+            backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Menu Start ultra transparente */
+        #startMenu {
+            background-color: rgba(55, 55, 55, 0.6) !important;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Itens do menu mais transparentes */
+        #startMenu .hover\:bg-blue-600:hover {
+            background-color: rgba(37, 99, 235, 0.6) !important;
+        }
+        
+        /* Cabeçalho ainda mais transparente */
+        #startMenu .bg-blue-600 {
+            background-color: rgba(37, 99, 235, 0.6) !important;
+        }
+        
+        /* Ajuste nos ícones para melhor contraste */
+        .absolute.bottom-0 .text-white,
+        #startMenu .text-white {
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        /* Remover sobreposição escura já que os elementos serão transparentes */
+        .absolute.inset-0 {
+            background-color: transparent !important;
+        }
+        
+        /* Estilo dos ícones da área de trabalho */
+        .desktop-icon {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            perspective: 1000px;
+            margin-bottom: 20px;
+            width: 80px;
+            text-align: center;
+        }
+        
+        .desktop-icon-container {
+            width: 72px;
+            height: 72px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.2),
+                0 4px 12px rgba(255, 255, 255, 0.1) inset;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transform-style: preserve-3d;
+            margin: 0 auto;
+        }
+        
+        .desktop-icon:hover .desktop-icon-container {
+            transform: translateY(-4px) scale(1.05) rotateX(5deg);
+            box-shadow: 
+                0 12px 40px rgba(0, 0, 0, 0.3),
+                0 6px 16px rgba(255, 255, 255, 0.15) inset;
+        }
+        
+        .desktop-icon-label {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            margin-top: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        
+        /* Selection Rectangle */
+        .selection-rectangle {
+            position: absolute;
+            background-color: rgba(0, 120, 215, 0.2);
+            border: 1px solid rgba(0, 120, 215, 0.8);
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        /* Windows XP Blue Screen */
+        #blueScreen {
+            background-color: #0000aa !important;
+            color: white !important;
+            font-family: 'Lucida Console', monospace !important;
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 20px !important;
+            line-height: 1.5 !important;
+            font-size: 14px !important;
+            white-space: pre !important;
+        }
+        
+        #blueScreen h1 {
+            font-size: 24px !important;
+            font-weight: bold !important;
+            margin-bottom: 20px !important;
+        }
+        
+        #blueScreen p {
+            margin-bottom: 10px !important;
+        }
+        
+        #blueScreen ul {
+            margin-left: 30px !important;
+            margin-bottom: 20px !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen overflow-hidden select-none">
+    <!-- Desktop -->
+    <div class="absolute inset-0">
+        <!-- Desktop Icons -->
+        <div class="flex flex-col items-start gap-3 p-5 w-28">
+            <div class="desktop-icon" onclick="openProgram('notepad')">
+                <div class="desktop-icon-container" style="color: #60a5fa">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <span class="desktop-icon-label text-white">Bloco de Notas</span>
+            </div>
+            
+            <div class="desktop-icon" onclick="openProgram('browser')">
+                <div class="desktop-icon-container" style="color: #34d399">
+                    <i class="fas fa-globe"></i>
+                </div>
+                <span class="desktop-icon-label text-white">Navegador</span>
+            </div>
+            
+            <div class="desktop-icon" onclick="openProgram('settings')">
+                <div class="desktop-icon-container" style="color: #a78bfa">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <span class="desktop-icon-label text-white">Configurações</span>
+            </div>
+            
+            <div class="desktop-icon" onclick="openWindow('flappy')">
+                <div class="desktop-icon-container">
+                    <i class="fas fa-gamepad text-2xl"></i>
+                </div>
+                <span class="desktop-icon-label text-white">Flappy Bird</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="absolute bottom-0 left-0 right-0 bg-gray-800 text-white h-12 flex items-center px-2 border-t border-gray-700">
+        <!-- Start Menu Button -->
+        <button id="startMenuButton" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md flex items-center h-9 mr-2 transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class="fas fa-bars text-white text-lg"></i>
+        </button>
+        
+        <!-- Program Icons in Taskbar -->
+        <div class="flex space-x-2 mr-auto">
+            <button id="notepadTaskIcon" class="w-8 h-8 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded hidden" onclick="focusWindow('notepad')">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button id="browserTaskIcon" class="w-8 h-8 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded hidden" onclick="focusWindow('browser')">
+                <i class="fas fa-globe"></i>
+            </button>
+            <button id="settingsTaskIcon" class="w-8 h-8 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded hidden" onclick="focusWindow('settings')">
+                <i class="fas fa-cog"></i>
+            </button>
+            <button id="flappyTaskIcon" class="w-8 h-8 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded hidden" onclick="focusWindow('flappy')">
+                <i class="fas fa-gamepad"></i>
+            </button>
+        </div>
+        
+        <!-- System Tray -->
+        <div class="flex items-center space-x-3">
+            <button class="flex items-center hover:bg-gray-700 px-2 py-1 rounded transition-colors" onclick="toggleVolume()">
+                <i class="fas fa-volume-up mr-1 text-gray-300"></i>
+                <span class="text-xs">87%</span>
+            </button>
+            <button class="flex items-center hover:bg-gray-700 px-2 py-1 rounded transition-colors" onclick="toggleWifiPopup()">
+                <i class="fas fa-wifi mr-1 text-gray-300"></i>
+            </button>
+            <button class="flex items-center hover:bg-gray-700 px-2 py-1 rounded transition-colors" onclick="toggleBatteryPopup()">
+                <i class="fas fa-battery-three-quarters text-gray-300"></i>
+            </button>
+            <div class="text-xs">
+                <span id="clock">--:--</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Menu -->
+    <div id="startMenu" class="absolute bottom-14 left-2 w-64 bg-gray-700 text-white rounded-t-lg shadow-xl hidden overflow-hidden">
+        <div class="bg-blue-600 p-2 flex items-center">
+            <img src="/images/foto de perfil 3.png" class="w-10 h-10 rounded-full mr-2" alt="Perfil">
+            <span class="font-semibold">Dilan B.</span>
+        </div>
+        
+        <div class="grid grid-cols-1 divide-y divide-gray-600">
+            <!-- Programs -->
+            <div class="p-1">
+                <div class="text-xs text-gray-300 px-2 py-1">Programas</div>
+                <div class="flex items-center px-2 py-1 hover:bg-blue-600 rounded cursor-pointer" onclick="openProgram('notepad')">
+                    <i class="fas fa-edit w-8 text-center"></i>
+                    <span>Bloco de Notas</span>
+                </div>
+                <div class="flex items-center px-2 py-1 hover:bg-blue-600 rounded cursor-pointer" onclick="openProgram('browser')">
+                    <i class="fas fa-globe w-8 text-center"></i>
+                    <span>Navegador</span>
+                </div>
+                <div class="flex items-center px-2 py-1 hover:bg-blue-600 rounded cursor-pointer" onclick="openWindow('flappy')">
+                    <i class="fas fa-gamepad w-8 text-center"></i>
+                    <span>Flappy Bird</span>
+                </div>
+            </div>
+            
+            <!-- Settings -->
+            <div class="p-1">
+                <div class="text-xs text-gray-300 px-2 py-1">Configurações</div>
+                <div class="flex items-center px-2 py-1 hover:bg-blue-600 rounded cursor-pointer" onclick="openProgram('settings')">
+                    <i class="fas fa-cog w-8 text-center"></i>
+                    <span>Configurações</span>
+                </div>
+            </div>
+            
+            <!-- Shutdown -->
+            <div class="p-1">
+                <div class="flex items-center px-2 py-1 hover:bg-red-600 rounded cursor-pointer" onclick="showBlueScreen()">
+                    <i class="fas fa-power-off w-8 text-center"></i>
+                    <span>Desligar</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Volume Control Popup -->
+    <div id="volumePopup" class="absolute bottom-14 right-32 w-48 bg-gray-800 bg-opacity-60 backdrop-blur-md text-white rounded-t-lg shadow-xl hidden overflow-hidden" style="backdrop-filter: blur(12px);">
+        <div class="p-3 space-y-2">
+            <div class="flex items-center justify-between">
+                <button id="muteButton" class="text-gray-300 hover:text-white" onclick="toggleMute()">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+                <span id="volumePercent" class="text-xs">87%</span>
+            </div>
+            <input type="range" id="volumeSlider" min="0" max="100" value="87" 
+                   class="w-full h-1.5 bg-gray-600 rounded-full appearance-none cursor-pointer"
+                   oninput="updateVolume(this.value)">
+        </div>
+    </div>
+
+    <!-- WiFi Control Popup -->
+    <div id="wifiPopup" class="absolute bottom-14 right-24 w-48 bg-gray-800 bg-opacity-60 backdrop-blur-md text-white rounded-t-lg shadow-xl hidden overflow-hidden" style="backdrop-filter: blur(12px);">
+        <div class="p-3 space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium">Wi-Fi</span>
+            </div>
+            <div class="space-y-1">
+                <div class="flex items-center justify-between hover:bg-gray-600 p-1 rounded cursor-pointer">
+                    <span class="text-xs">Rede Casa</span>
+                    <i class="fas fa-check text-green-400 text-xs"></i>
+                </div>
+                <div class="flex items-center justify-between hover:bg-gray-600 p-1 rounded cursor-pointer">
+                    <span class="text-xs">Rede Vizinho</span>
+                    <i class="fas fa-signal text-yellow-400 text-xs"></i>
+                </div>
+                <div class="flex items-center justify-between hover:bg-gray-600 p-1 rounded cursor-pointer">
+                    <span class="text-xs">WiFi Público</span>
+                    <i class="fas fa-signal text-red-400 text-xs"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Battery Control Popup -->
+    <div id="batteryPopup" class="absolute bottom-14 right-16 w-48 bg-gray-800 bg-opacity-60 backdrop-blur-md text-white rounded-t-lg shadow-xl hidden overflow-hidden" style="backdrop-filter: blur(12px);">
+        <div class="p-3 space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-medium">Bateria</span>
+                <span class="text-xs text-green-400">76%</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-battery-three-quarters text-xl text-green-400"></i>
+                <div class="w-full bg-gray-600 rounded-full h-2">
+                    <div class="bg-green-400 h-2 rounded-full" style="width: 76%"></div>
+                </div>
+            </div>
+            <div class="text-xs text-gray-300">Restante: ~3h 42m</div>
+        </div>
+    </div>
+
+    <!-- Windows XP Blue Screen -->
+    <div id="blueScreen" class="hidden">
+        <h1>Um problema foi detectado e o Sistema foi encerrado para evitar danos ao seu computador.</h1>
+        
+        <p>DRIVER_IRQL_NOT_LESS_OR_EQUAL</p>
+        
+        <p>Se você está vendo esta tela de erro pela primeira vez, reinicie seu computador. Se esta tela aparecer novamente, siga estas etapas:</p>
+        
+        <ul>
+            <li>Verifique se algum hardware ou software novo foi instalado corretamente.</li>
+            <li>Se for um novo hardware ou software, entre em contato com o fabricante para obter atualizações do Windows.</li>
+            <li>Se os problemas continuarem, desative ou remova qualquer hardware ou software instalado recentemente.</li>
+        </ul>
+        
+        <p>Informações técnicas:</p>
+        
+        <p>*** STOP: 0x000000D1 (0x0000000C,0x00000002,0x00000000,0xF86B5A89)</p>
+        
+        <p>*** SPCMDCON.SYS - Address F86B5A89 base at F86B5000, DateStamp 3d6dd67c</p>
+        
+        <p>Iniciando despejo de memória física...</p>
+        <p>Despejo de memória física completo.</p>
+        <p>Entre em contato com o administrador do sistema ou com o suporte técnico.</p>
+    </div>
+
+    <!-- Windows -->
+    <!-- Notepad Window -->
+    <div id="notepadWindow" class="window absolute hidden bg-gray-900 shadow-xl rounded-lg top-1/4 left-1/4 overflow-hidden flex flex-col border border-gray-700" style="width: 500px; height: 400px; z-index: 10;">
+        <div class="draggable bg-blue-600 text-white px-3 py-2 flex justify-between items-center cursor-move">
+            <div class="flex items-center">
+                <i class="fas fa-edit mr-2"></i>
+                <span>Bloco de Notas - Sem título</span>
+            </div>
+            <div>
+                <button class="w-8 h-6 hover:bg-blue-700" onclick="minimizeWindow('notepad')">
+                    <i class="fas fa-window-minimize"></i>
+                </button>
+                <button class="w-8 h-6 hover:bg-blue-700" onclick="toggleMaximize('notepad')">
+                    <i class="fas fa-window-maximize"></i>
+                </button>
+                <button class="w-8 h-6 hover:bg-red-500" onclick="closeWindow('notepad')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-hidden">
+            <textarea class="w-full h-full p-3 notepad-content font-mono text-gray-200 bg-gray-800 outline-none resize-none">Bem-vindo ao Bloco de Notas!
+
+Você pode digitar qualquer coisa aqui.
+
+Recursos:
+- Edição básica de texto
+- Gerenciamento de janelas
+- Design minimalista</textarea>
+        </div>
+        <div class="bg-gray-800 px-3 py-1 text-xs flex justify-between items-center border-t border-gray-700 text-gray-400">
+            <span>Linha 1, Coluna 1</span>
+            <span>UTF-8</span>
+        </div>
+    </div>
+
+    <!-- Browser Window -->
+    <div id="browserWindow" class="window absolute hidden bg-white shadow-xl rounded-lg top-1/4 left-1/4 overflow-hidden flex flex-col border border-gray-300" style="width: 600px; height: 450px; z-index: 10;">
+        <div class="draggable bg-blue-600 text-white px-3 py-2 flex justify-between items-center cursor-move">
+            <div class="flex items-center">
+                <i class="fas fa-globe mr-2"></i>
+                <span>Navegador - Google</span>
+            </div>
+            <div>
+                <button class="w-8 h-6 hover:bg-blue-700" onclick="minimizeWindow('browser')">
+                    <i class="fas fa-window-minimize"></i>
+                </button>
+                <button class="w-8 h-6 hover:bg-blue-700" onclick="toggleMaximize('browser')">
+                    <i class="fas fa-window-maximize"></i>
+                </button>
+                <button class="w-8 h-6 hover:bg-red-500" onclick="closeWindow('browser')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Browser Toolbar -->
+        <div class="bg-gray-100 px-3 py-2 flex items-center border-b border-gray-300">
+            <button class="p-1 rounded-full hover:bg-gray-200 mr-1">
+                <i class="fas fa-arrow-left text-gray-600"></i>
+            </button>
+            <button class="p-1 rounded-full hover:bg-gray-200 mr-1">
+                <i class="fas fa-arrow-right text-gray-600"></i>
+            </button>
+            <button class="p-1 rounded-full hover:bg-gray-200 mr-1">
+                <i class="fas fa-redo text-gray-600"></i>
+            </button>
+            <input type="text" value="https://www.google.com" class="flex-1 px-3 py-1 bg-white border border-gray-300 rounded-full focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm mx-2">
+            <button class="p-1 rounded-full hover:bg-gray-200">
+                <i class="fas fa-home text-gray-600"></i>
+            </button>
+        </div>
+        
+        <!-- Google Content -->
+        <div class="browser-content overflow-auto p-4 bg-white flex flex-col items-center">
+            <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png" alt="Google" class="mb-8 mt-12">
+            <div class="w-full max-w-xl mb-8">
+                <div class="relative">
+                    <input type="text" class="w-full px-5 py-3 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" placeholder="Pesquisar no Google ou digitar um URL">
+                    <div class="absolute right-3 top-3 flex space-x-2">
+                        <i class="fas fa-search text-gray-400"></i>
+                        <i class="fas fa-microphone text-blue-500"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="flex space-x-3">
+                <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm">Pesquisa Google</button>
+                <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm">Estou com sorte</button>
+            </div>
+            <div class="mt-8 text-sm text-gray-600">
+                <span class="mr-4">Idioma do Google: Português</span>
+                <span>Brasil</span>
+            </div>
+        </div>
+        
+        <div class="bg-gray-100 px-3 py-1 text-xs flex justify-between items-center border-t border-gray-300">
+            <span>Google</span>
+            <span>Seguro</span>
+        </div>
+    </div>
+
+    <!-- Flappy Bird Window -->
+    <div id="flappyWindow" class="window absolute hidden bg-blue-100 rounded-lg shadow-xl overflow-hidden" style="width: 400px; height: 600px;">
+        <div class="draggable bg-blue-600 text-white p-2 flex justify-between items-center cursor-move">
+            <span>Flappy Bird</span>
+            <div>
+                <button class="px-2 hover:bg-blue-700" onclick="minimizeWindow('flappy')"><i class="fas fa-window-minimize"></i></button>
+                <button class="px-2 hover:bg-blue-700" onclick="maximizeWindow('flappy')"><i class="fas fa-window-maximize"></i></button>
+                <button class="px-2 hover:bg-red-500" onclick="closeWindow('flappy')"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <div class="p-0 h-full w-full bg-blue-100">
+            <iframe src="https://gdgunnars.github.io/Flappy-Bird/" width="100%" height="100%" frameborder="0"></iframe>
+        </div>
+    </div>
+
+    <!-- Settings Window -->
+    <div id="settingsWindow" class="window absolute hidden bg-gray-900 shadow-xl rounded-lg top-1/4 left-1/3 overflow-hidden flex flex-col border border-gray-700" style="width: 500px; height: 380px; z-index: 10;">
+        <div class="draggable bg-blue-600 text-white px-3 py-2 flex justify-between items-center cursor-move">
+            <div class="flex items-center">
+                <i class="fas fa-cog mr-2"></i>
+                <span>Configurações</span>
+            </div>
+            <div>
+                <button class="w-8 h-6 hover:bg-blue-700" onclick="minimizeWindow('settings')">
+                    <i class="fas fa-window-minimize"></i>
+                </button>
+                <button class="w-8 h-6 hover:bg-blue-700" onclick="toggleMaximize('settings')">
+                    <i class="fas fa-window-maximize"></i>
+                </button>
+                <button class="w-8 h-6 hover:bg-red-500" onclick="closeWindow('settings')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="flex-1 overflow-auto bg-gray-800 text-gray-200 p-4">
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-3 border-b border-gray-700 pb-2">Configurações do Sistema</h2>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span>Modo Escuro</span>
+                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                            <input type="checkbox" id="darkModeToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                            <label for="darkModeToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <span>Efeitos Sonoros</span>
+                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                            <input type="checkbox" id="soundToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                            <label for="soundToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h2 class="text-lg font-semibold mb-3 border-b border-gray-700 pb-2">Aparência</h2>
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-gray-700 rounded p-3 text-center cursor-pointer hover:bg-gray-600">
+                        <div class="w-full h-16 bg-blue-600 rounded mb-2"></div>
+                        <span>Azul</span>
+                    </div>
+                    <div class="bg-gray-700 rounded p-3 text-center cursor-pointer hover:bg-gray-600">
+                        <div class="w-full h-16 bg-green-600 rounded mb-2"></div>
+                        <span>Verde</span>
+                    </div>
+                    <div class="bg-gray-700 rounded p-3 text-center cursor-pointer hover:bg-gray-600">
+                        <div class="w-full h-16 bg-purple-600 rounded mb-2"></div>
+                        <span>Roxo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-800 px-3 py-1 text-xs flex justify-between items-center border-t border-gray-700 text-gray-400">
+            <span>Sistema v1.0</span>
+            <span>Configurações</span>
+        </div>
+    </div>
+
+    <script>
+        // Atualizar relógio em tempo real
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            const timeString = `${hours}:${minutes} ${ampm}`;
+            document.getElementById('clock').textContent = timeString;
+        }
+        updateClock();
+        setInterval(updateClock, 60000); // Update every minute
+
+        // Start menu toggle
+        document.getElementById('startMenuButton').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('startMenu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Close menu when clicking elsewhere
+        document.addEventListener('click', function() {
+            document.getElementById('startMenu').classList.add('hidden');
+        });
+
+        // Prevent start menu from closing when clicking inside it
+        document.getElementById('startMenu').addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+
+        // Window management
+        let activeWindow = null;
+        
+        function openProgram(program) {
+            const window = document.getElementById(`${program}Window`);
+            const taskIcon = document.getElementById(`${program}TaskIcon`);
+            
+            if (window.classList.contains('hidden')) {
+                window.classList.remove('hidden');
+                taskIcon.classList.remove('hidden');
+            }
+            
+            focusWindow(program);
+            document.getElementById('startMenu').classList.add('hidden');
+        }
+        
+        function openWindow(program) {
+            const window = document.getElementById(`${program}Window`);
+            const taskIcon = document.getElementById(`${program}TaskIcon`);
+            
+            if (window.classList.contains('hidden')) {
+                window.classList.remove('hidden');
+                taskIcon.classList.remove('hidden');
+                
+                // Centralização inicial
+                const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+                const viewportHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 48;
+                
+                window.style.left = `${(viewportWidth - 400) / 2}px`;
+                window.style.top = `${(viewportHeight - 600) / 2}px`;
+                window.style.transform = 'none';
+            }
+            
+            focusWindow(program);
+            document.getElementById('startMenu').classList.add('hidden');
+        }
+        
+        function closeWindow(program) {
+            document.getElementById(`${program}Window`).classList.add('hidden');
+            document.getElementById(`${program}TaskIcon`).classList.add('hidden');
+        }
+        
+        function minimizeWindow(program) {
+            const window = document.getElementById(`${program}Window`);
+            window.classList.add('hidden');
+        }
+        
+        function toggleMaximize(program) {
+            const window = document.getElementById(`${program}Window`);
+            if (window.classList.contains('maximized')) {
+                window.classList.remove('maximized');
+                window.style.width = program === 'browser' ? '600px' : '500px';
+                window.style.height = program === 'browser' ? '450px' : (program === 'notepad' ? '400px' : '380px');
+                window.style.top = '25%';
+                window.style.left = program === 'browser' ? 'calc(50% - 300px)' : (program === 'notepad' ? '25%' : '50%');
+            } else {
+                window.classList.add('maximized');
+                window.style.width = 'calc(100% - 20px)';
+                window.style.height = 'calc(100% - 72px)';
+                window.style.top = '10px';
+                window.style.left = '10px';
+            }
+        }
+        
+        function focusWindow(program) {
+            // Bring to front
+            const allWindows = document.querySelectorAll('.window');
+            let highestZIndex = 10;
+            
+            allWindows.forEach(win => {
+                const currentZIndex = parseInt(win.style.zIndex) || 0;
+                if (currentZIndex > highestZIndex) {
+                    highestZIndex = currentZIndex;
+                }
+                win.style.zIndex = '10'; // Reset all windows to base z-index
+            });
+            
+            const window = document.getElementById(`${program}Window`);
+            window.style.zIndex = (highestZIndex + 1).toString();
+            
+            // Show if minimized
+            if (window.classList.contains('hidden')) {
+                window.classList.remove('hidden');
+            }
+            
+            activeWindow = program;
+        }
+        
+        function showSettingsTab(tabName) {
+            const tabs = document.querySelectorAll('.settings-tab');
+            const contents = document.querySelectorAll('.settings-content');
+            
+            tabs.forEach(tab => tab.classList.remove('selected', 'bg-gray-200'));
+            contents.forEach(content => content.classList.add('hidden'));
+            
+            document.querySelector(`.settings-tab[onclick="showSettingsTab('${tabName}')"]`).classList.add('selected', 'bg-gray-200');
+            document.getElementById(`${tabName}Tab`).classList.remove('hidden');
+        }
+        
+        // Make windows draggable
+        document.querySelectorAll('.draggable').forEach(header => {
+            const window = header.parentElement;
+            let isDragging = false;
+            let offsetX, offsetY;
+            
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                offsetX = e.clientX - window.getBoundingClientRect().left;
+                offsetY = e.clientY - window.getBoundingClientRect().top;
+                
+                // Bring window to front
+                const allWindows = document.querySelectorAll('.window');
+                let highestZIndex = 10;
+                
+                allWindows.forEach(win => {
+                    const currentZIndex = parseInt(win.style.zIndex) || 0;
+                    if (currentZIndex > highestZIndex) {
+                        highestZIndex = currentZIndex;
+                    }
+                    win.style.zIndex = '10'; // Reset all windows to base z-index
+                });
+                
+                window.style.zIndex = (highestZIndex + 1).toString();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const x = e.clientX - offsetX;
+                const y = e.clientY - offsetY;
+                
+                window.style.left = `${x}px`;
+                window.style.top = `${y}px`;
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+            });
+        });
+        
+        // Focus window when clicked
+        document.querySelectorAll('.window').forEach(window => {
+            window.addEventListener('click', () => {
+                const allWindows = document.querySelectorAll('.window');
+                let highestZIndex = 10;
+                
+                allWindows.forEach(win => {
+                    const currentZIndex = parseInt(win.style.zIndex) || 0;
+                    if (currentZIndex > highestZIndex) {
+                        highestZIndex = currentZIndex;
+                    }
+                    win.style.zIndex = '10'; // Reset all windows to base z-index
+                });
+                
+                window.style.zIndex = (highestZIndex + 1).toString();
+            });
+        });
+        
+        let isMuted = false;
+        let currentVolume = 87;
+        
+        function toggleVolume() {
+            const popup = document.getElementById('volumePopup');
+            const isOpening = popup.classList.contains('hidden');
+            
+            popup.classList.toggle('hidden');
+            
+            // Fechar menu WiFi se estiver aberto
+            document.getElementById('wifiPopup').classList.add('hidden');
+            document.removeEventListener('click', closeWifiPopupOutside);
+            
+            if (isOpening) {
+                document.addEventListener('click', closeVolumePopupOutside);
+            } else {
+                document.removeEventListener('click', closeVolumePopupOutside);
+            }
+        }
+        
+        function closeVolumePopupOutside(event) {
+            const popup = document.getElementById('volumePopup');
+            const volumeButton = document.querySelector('button[onclick="toggleVolume()"]');
+            
+            // Se o clique não foi nem no popup nem no botão do volume
+            if (!popup.contains(event.target) && event.target !== volumeButton && !volumeButton.contains(event.target)) {
+                popup.classList.add('hidden');
+                document.removeEventListener('click', closeVolumePopupOutside);
+            }
+        }
+        
+        function toggleMute() {
+            isMuted = !isMuted;
+            const button = document.getElementById('muteButton');
+            const slider = document.getElementById('volumeSlider');
+            const volumeText = document.querySelector('button[onclick="toggleVolume()"] span');
+            const volumeIcon = document.querySelector('button[onclick="toggleVolume()"] i');
+            
+            if (isMuted) {
+                button.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                volumeIcon.className = 'fas fa-volume-mute mr-1 text-gray-300';
+                slider.value = 0;
+                updateVolumeText(0);
+                volumeText.classList.add('hidden');
+            } else {
+                button.innerHTML = '<i class="fas fa-volume-up"></i>';
+                volumeIcon.className = 'fas fa-volume-up mr-1 text-gray-300';
+                slider.value = currentVolume;
+                updateVolumeText(currentVolume);
+                volumeText.classList.remove('hidden');
+            }
+        }
+        
+        function updateVolume(value) {
+            currentVolume = value;
+            updateVolumeText(value);
+            
+            const button = document.getElementById('muteButton');
+            if (value == 0) {
+                isMuted = true;
+                button.innerHTML = '<i class="fas fa-volume-mute"></i>';
+            } else {
+                isMuted = false;
+                button.innerHTML = '<i class="fas fa-volume-up"></i>';
+            }
+        }
+        
+        function updateVolumeText(value) {
+            document.getElementById('volumePercent').textContent = value + '%';
+            document.querySelector('button[onclick="toggleVolume()"] span').textContent = value + '%';
+        }
+        
+        function toggleWifiPopup() {
+            const popup = document.getElementById('wifiPopup');
+            const isOpening = popup.classList.contains('hidden');
+            
+            popup.classList.toggle('hidden');
+            
+            // Fechar menu de volume se estiver aberto
+            document.getElementById('volumePopup').classList.add('hidden');
+            document.removeEventListener('click', closeVolumePopupOutside);
+            
+            if (isOpening) {
+                document.addEventListener('click', closeWifiPopupOutside);
+            } else {
+                document.removeEventListener('click', closeWifiPopupOutside);
+            }
+        }
+        
+        function closeWifiPopupOutside(event) {
+            const popup = document.getElementById('wifiPopup');
+            const wifiButton = document.querySelector('button[onclick="toggleWifiPopup()"]');
+            
+            // Se o clique não foi nem no popup nem no botão do WiFi
+            if (!popup.contains(event.target) && event.target !== wifiButton && !wifiButton.contains(event.target)) {
+                popup.classList.add('hidden');
+                document.removeEventListener('click', closeWifiPopupOutside);
+            }
+        }
+        
+        function toggleBatteryPopup() {
+            const popup = document.getElementById('batteryPopup');
+            const isOpening = popup.classList.contains('hidden');
+            
+            popup.classList.toggle('hidden');
+            
+            // Fechar outros menus se estiverem abertos
+            document.getElementById('volumePopup').classList.add('hidden');
+            document.getElementById('wifiPopup').classList.add('hidden');
+            document.removeEventListener('click', closeVolumePopupOutside);
+            document.removeEventListener('click', closeWifiPopupOutside);
+            
+            if (isOpening) {
+                document.addEventListener('click', closeBatteryPopupOutside);
+            } else {
+                document.removeEventListener('click', closeBatteryPopupOutside);
+            }
+        }
+        
+        function closeBatteryPopupOutside(event) {
+            const popup = document.getElementById('batteryPopup');
+            const batteryButton = document.querySelector('button[onclick="toggleBatteryPopup()"]');
+            
+            if (!popup.contains(event.target) && event.target !== batteryButton && !batteryButton.contains(event.target)) {
+                popup.classList.add('hidden');
+                document.removeEventListener('click', closeBatteryPopupOutside);
+            }
+        }
+
+        /* Desktop Selection Logic */
+        let isSelecting = false;
+        let startX, startY;
+        let selectionRect;
+        
+        document.addEventListener('mousedown', function(e) {
+            // Check if clicked on desktop (not on an icon or other element)
+            if (e.target.classList.contains('absolute') && e.target.classList.contains('inset-0')) {
+                isSelecting = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                // Create selection rectangle
+                selectionRect = document.createElement('div');
+                selectionRect.className = 'selection-rectangle';
+                document.body.appendChild(selectionRect);
+                
+                // Update position
+                updateSelectionRect(e);
+            }
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (isSelecting) {
+                updateSelectionRect(e);
+            }
+        });
+        
+        document.addEventListener('mouseup', function() {
+            if (isSelecting) {
+                isSelecting = false;
+                if (selectionRect) {
+                    selectionRect.remove();
+                    selectionRect = null;
+                }
+            }
+        });
+        
+        function updateSelectionRect(e) {
+            if (!selectionRect) return;
+            
+            const currentX = e.clientX;
+            const currentY = e.clientY;
+            
+            // Calculate position and dimensions
+            const left = Math.min(startX, currentX);
+            const top = Math.min(startY, currentY);
+            const width = Math.abs(currentX - startX);
+            const height = Math.abs(currentY - startY);
+            
+            // Apply styles
+            selectionRect.style.left = left + 'px';
+            selectionRect.style.top = top + 'px';
+            selectionRect.style.width = width + 'px';
+            selectionRect.style.height = height + 'px';
+        }
+        
+        function showBlueScreen() {
+            document.getElementById('blueScreen').classList.remove('hidden');
+            document.addEventListener('keydown', hideBlueScreen);
+            document.addEventListener('click', hideBlueScreen);
+        }
+        
+        function hideBlueScreen() {
+            document.getElementById('blueScreen').classList.add('hidden');
+            document.removeEventListener('keydown', hideBlueScreen);
+            document.removeEventListener('click', hideBlueScreen);
+        }
+    </script>
+</body>
+</html>

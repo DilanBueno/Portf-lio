@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timezy - Sistema Inteligente de Agendamento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .event-tag {
+            @apply text-xs px-2 py-1 rounded-full;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .time-slot:hover {
+            @apply bg-blue-50 cursor-pointer;
+        }
+        .selected-time {
+            @apply bg-blue-100 border-l-4 border-blue-500;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .rotate {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-indigo-600 text-white shadow-md">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-calendar-check text-2xl"></i>
+                    <h1 class="text-2xl font-bold">Timezy</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="hidden md:block bg-white text-indigo-600 px-4 py-2 rounded-lg font-medium hover:bg-indigo-50 transition">
+                        <i class="fas fa-plus mr-2"></i>Novo Evento
+                    </button>
+                    <div class="relative">
+                        <img src="/images/foto de perfil 3.png" alt="Perfil" class="w-10 h-10 rounded-full border-2 border-white cursor-pointer">
+                        <span class="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 container mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
+            <!-- Sidebar -->
+            <aside class="w-full lg:w-64 bg-white rounded-xl shadow-md p-4 h-fit lg:sticky lg:top-6">
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-bars mr-2"></i> Menu
+                    </h2>
+                    <nav>
+                        <ul class="space-y-2">
+                            <li>
+                                <a href="#" class="flex items-center p-2 text-indigo-600 bg-indigo-50 rounded-lg">
+                                    <i class="fas fa-calendar-day mr-3"></i> Diária
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                                    <i class="fas fa-calendar-week mr-3"></i> Semanal
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                                    <i class="fas fa-calendar-alt mr-3"></i> Mensal
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                                    <i class="fas fa-tasks mr-3"></i> Tarefas
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center p-2 text-gray-600 hover:bg-gray-100 rounded-lg">
+                                    <i class="fas fa-cog mr-3"></i> Configurações
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-lg font-semibold text-gray-700">Categorias</h2>
+                        <button class="text-gray-500 hover:text-indigo-600">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                            <span class="text-gray-600">Reuniões</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                            <span class="text-gray-600">Pessoal</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                            <span class="text-gray-600">Trabalho</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-purple-500 rounded-full mr-2"></span>
+                            <span class="text-gray-600">Saúde</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
+                            <span class="text-gray-600">Social</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <h2 class="text-lg font-semibold text-gray-700 mb-3">Próximos</h2>
+                    <div class="bg-blue-50 rounded-lg p-3 mb-3">
+                        <div class="text-xs text-blue-500 font-medium">Hoje, 14:00</div>
+                        <h3 class="font-medium">Reunião de Sincronização da Equipe</h3>
+                        <div class="flex mt-1">
+                            <span class="event-tag bg-blue-100 text-blue-600">Trabalho</span>
+                        </div>
+                    </div>
+                    <div class="bg-purple-50 rounded-lg p-3">
+                        <div class="text-xs text-purple-500 font-medium">Amanhã, 7:00</div>
+                        <h3 class="font-medium">Sessão de Yoga Matinal</h3>
+                        <div class="flex mt-1">
+                            <span class="event-tag bg-purple-100 text-purple-600">Saúde</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Calendar Area -->
+            <div class="flex-1">
+                <!-- Calendar Header -->
+                <div class="bg-white rounded-xl shadow-md p-4 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div class="flex items-center mb-4 md:mb-0">
+                            <h2 class="text-xl font-bold text-gray-800">Agenda Diária</h2>
+                            <span class="ml-4 text-gray-500">Terça-feira, 20 de Junho, 2023</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button class="p-2 rounded-lg border border-gray-200 hover:bg-gray-100">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                                Hoje
+                            </button>
+                            <button class="p-2 rounded-lg border border-gray-200 hover:bg-gray-100">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <div class="relative ml-2">
+                                <button class="flex items-center space-x-2 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-100">
+                                    <span>Dia</span>
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </button>
+                                <!-- Dropdown content would go here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar Grid -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="grid grid-cols-7 border-b">
+                        <div class="p-3 text-center font-medium text-gray-500">Horário</div>
+                        <div class="p-3 text-center font-medium text-gray-800">Segunda</div>
+                        <div class="p-3 text-center font-medium text-gray-800">Terça</div>
+                        <div class="p-3 text-center font-medium text-gray-800">Quarta</div>
+                        <div class="p-3 text-center font-medium text-gray-800">Quinta</div>
+                        <div class="p-3 text-center font-medium text-gray-800">Sexta</div>
+                        <div class="p-3 text-center font-medium text-gray-500">Fim de Semana</div>
+                    </div>
+                    
+                    <div class="overflow-y-auto scrollbar-hide" style="max-height: 60vh;">
+                        <!-- Time slots -->
+                        <div class="grid grid-cols-7">
+                            <!-- Time column -->
+                            <div class="border-r">
+                                <!-- Generate time slots from 6AM to 10PM -->
+                                <script>
+                                    document.write(Array.from({length: 17}, (_, i) => {
+                                        const hour = i + 6;
+                                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                                        const displayHour = hour > 12 ? hour - 12 : hour;
+                                        return `<div class="h-16 border-b flex items-start justify-end pr-2 pt-1 text-xs text-gray-400">${displayHour}:00 ${ampm}</div>`;
+                                    }).join(''));
+                                </script>
+                            </div>
+                            
+                            <!-- Calendar cells -->
+                            <div class="col-span-6 grid grid-cols-6">
+                                <!-- Generate cells for each day and time -->
+                                <script>
+                                    document.write(Array.from({length: 6}, () => 
+                                        Array.from({length: 17}, () => 
+                                            `<div class="h-16 border-b border-r time-slot"></div>`
+                                        ).join('')
+                                    ).join(''));
+                                </script>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Events -->
+                <div class="mt-6">
+                    <div class="bg-white rounded-xl shadow-md p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold text-lg">Eventos de Hoje</h3>
+                            <button class="text-indigo-600 hover:text-indigo-800">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="space-y-3" id="events-list">
+                            <!-- Event cards will be added here by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Event Panel - Initially Hidden -->
+            <div id="event-panel" class="hidden lg:block lg:w-80 bg-white rounded-xl shadow-md p-4 h-fit lg:sticky lg:top-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold text-lg">Criar Evento</h3>
+                    <button id="close-panel" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <form id="event-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Título do Evento</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Digite o título do evento">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Início</label>
+                            <input type="time" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Fim</label>
+                            <input type="time" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="work">Trabalho</option>
+                            <option value="personal">Pessoal</option>
+                            <option value="meeting">Reunião</option>
+                            <option value="health">Saúde</option>
+                            <option value="social">Social</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                        <textarea rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Detalhes do evento..."></textarea>
+                    </div>
+                    
+                    <div class="flex space-x-3 pt-2">
+                        <button type="submit" class="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
+                            Criar Evento
+                        </button>
+                        <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-6">
+                    <h3 class="font-semibold text-lg mb-3">Adição Rápida</h3>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="px-2 py-1 bg-blue-50 text-blue-600 rounded text-sm flex items-center justify-center">
+                            <i class="fas fa-briefcase mr-1 text-xs"></i>
+                            Reunião
+                        </button>
+                        <button class="px-2 py-1 bg-green-50 text-green-600 rounded text-sm flex items-center justify-center">
+                            <i class="fas fa-biking mr-1 text-xs"></i>
+                            Treino
+                        </button>
+                        <button class="px-2 py-1 bg-purple-50 text-purple-600 rounded text-sm flex items-center justify-center">
+                            <i class="fas fa-utensils mr-1 text-xs"></i>
+                            Almoço
+                        </button>
+                        <button class="px-2 py-1 bg-yellow-50 text-yellow-600 rounded text-sm flex items-center justify-center">
+                            <i class="fas fa-plane mr-1 text-xs"></i>
+                            Viagem
+                        </button>
+                        <button class="px-2 py-1 bg-red-50 text-red-600 rounded text-sm flex items-center justify-center">
+                            <i class="fas fa-birthday-cake mr-1 text-xs"></i>
+                            Aniversário
+                        </button>
+                        <button class="px-2 py-1 bg-gray-50 text-gray-600 rounded text-sm flex items-center justify-center">
+                            <i class="fas fa-ellipsis-h mr-1 text-xs"></i>
+                            Mais
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Create Event Button -->
+        <div class="lg:hidden fixed bottom-6 right-6">
+            <button id="mobile-create-btn" class="bg-indigo-600 text-white p-4 rounded-full shadow-lg hover:bg-indigo-700 transition transform hover:scale-110">
+                <i class="fas fa-plus text-xl"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Dados de eventos de exemplo
+        const events = [
+            {
+                id: 1,
+                title: "Reunião de Sincronização da Equipe",
+                time: "10:00 - 11:30",
+                category: "trabalho",
+                color: "blue",
+                attendees: 5,
+                location: "Sala de Reuniões A",
+                description: "Sincronização semanal da equipe para discutir atualizações e bloqueios do projeto."
+            },
+            {
+                id: 2,
+                title: "Almoço com Cliente",
+                time: "12:30 - 14:00",
+                category: "reunião",
+                color: "red",
+                attendees: 2,
+                location: "Bistrô Centro",
+                description: "Discutir novos termos de contrato com representantes do cliente."
+            },
+            {
+                id: 3,
+                title: "Treino na Academia",
+                time: "18:00 - 19:30",
+                category: "saúde",
+                color: "purple",
+                description: "Sessão de treinamento pessoal com o instrutor."
+            },
+            {
+                id: 4,
+                title: "Prazo do Projeto",
+                time: "Dia Todo",
+                category: "trabalho",
+                color: "blue",
+                description: "Enviar entregas finais do projeto do 2º trimestre."
+            }
+        ];
+
+        // Elementos do DOM
+        const eventsList = document.getElementById('events-list');
+        const timeSlots = document.querySelectorAll('.time-slot');
+        const eventPanel = document.getElementById('event-panel');
+        const closePanelBtn = document.getElementById('close-panel');
+        const mobileCreateBtn = document.getElementById('mobile-create-btn');
+        const eventForm = document.getElementById('event-form');
+
+        // Renderizar eventos
+        function renderEvents() {
+            eventsList.innerHTML = '';
+            events.forEach(event => {
+                const eventCard = document.createElement('div');
+                eventCard.className = `bg-${event.color}-50 rounded-lg p-3 border-l-4 border-${event.color}-500 fade-in`;
+                eventCard.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="text-xs text-${event.color}-500 font-medium">${event.time}</div>
+                            <h3 class="font-medium">${event.title}</h3>
+                        </div>
+                        <button class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    </div>
+                    <div class="flex mt-2 items-center">
+                        <span class="event-tag bg-${event.color}-100 text-${event.color}-600">${event.category.charAt(0).toUpperCase() + event.category.slice(1)}</span>
+                        ${event.attendees ? `<span class="ml-2 flex items-center text-xs text-gray-500">
+                            <i class="fas fa-user-friends mr-1"></i>${event.attendees}
+                        </span>` : ''}
+                        ${event.location ? `<span class="ml-2 flex items-center text-xs text-gray-500">
+                            <i class="fas fa-map-marker-alt mr-1"></i>${event.location}
+                        </span>` : ''}
+                    </div>
+                    ${event.description ? `<p class="mt-2 text-sm text-gray-600">${event.description}</p>` : ''}
+                `;
+                eventsList.appendChild(eventCard);
+            });
+        }
+
+        // Tratar seleção de slot de tempo
+        timeSlots.forEach(slot => {
+            slot.addEventListener('click', function() {
+                // Remover seleção de todos os slots primeiro
+                timeSlots.forEach(s => s.classList.remove('selected-time'));
+                
+                // Adicionar seleção ao slot clicado
+                this.classList.add('selected-time');
+                
+                // Mostrar painel de evento
+                eventPanel.classList.remove('hidden');
+                
+                // Para demonstração: definir hora aleatória no formulário quando o slot é clicado
+                const hour = Math.floor(Math.random() * 12) + 1;
+                const minute = Math.floor(Math.random() * 60).toString().padStart(2, '0');
+                const ampm = Math.random() > 0.5 ? 'PM' : 'AM';
+                document.querySelector('#event-panel input[type="time"]').value = `${hour}:${minute}`;
+            });
+        });
+
+        // Alternar painel de evento
+        function toggleEventPanel() {
+            eventPanel.classList.toggle('hidden');
+        }
+
+        // Event listeners
+        closePanelBtn.addEventListener('click', toggleEventPanel);
+        mobileCreateBtn.addEventListener('click', toggleEventPanel);
+
+        // Envio do formulário
+        eventForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Em um aplicativo real, você processaria os dados do formulário aqui
+            alert('Evento criado com sucesso!');
+            
+            // Fechar o painel após o envio
+            toggleEventPanel();
+        });
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', renderEvents);
+
+        // Toggle do menu móvel iria aqui em uma implementação completa
+    </script>
+</body>
+</html>

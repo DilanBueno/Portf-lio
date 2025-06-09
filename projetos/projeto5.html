@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus AI - Painel de Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6d28d9',
+                        secondary: '#8b5cf6',
+                        dark: '#0f172a',
+                        darker: '#020617',
+                        accent: '#10b981',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        
+        /* Typing indicator animation */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .typing-dot {
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        /* Chat message fade in */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message-fade {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-darker text-gray-200 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="hidden md:flex flex-col w-64 bg-dark border-r border-gray-800">
+            <div class="p-4 border-b border-gray-800">
+                <h1 class="text-xl font-bold text-white flex items-center">
+                    <i class="fas fa-robot mr-2 text-secondary"></i>
+                    Nexus AI
+                </h1>
+                <p class="text-xs text-gray-400">v2.4.1</p>
+            </div>
+            
+            <div class="p-4">
+                <button id="new-chat-btn" class="w-full bg-primary hover:bg-secondary text-white py-2 px-4 rounded-lg flex items-center justify-center transition">
+                    <i class="fas fa-plus mr-2"></i> Novo Chat
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto">
+                <h3 class="px-4 py-2 text-sm font-semibold text-gray-400 uppercase">Chats Recentes</h3>
+                <div id="chat-history" class="space-y-1 px-2">
+                    <!-- Histórico de chats será adicionado aqui -->
+                </div>
+            </div>
+            
+            <div class="p-4 border-t border-gray-800">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
+                        <img src="/images/foto de perfil 3.png" alt="Dilan B." class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium">Dilan B.</p>
+                        <p class="text-xs text-gray-400">Plano Pro</p>
+                    </div>
+                    <button class="ml-auto text-gray-400 hover:text-white">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile sidebar toggle -->
+        <div class="md:hidden fixed top-4 left-4 z-30">
+            <button id="mobile-menu-btn" class="p-2 rounded-lg bg-dark text-white">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        
+        <!-- Mobile sidebar -->
+        <div id="mobile-sidebar" class="fixed inset-0 z-20 bg-black bg-opacity-50 hidden">
+            <div class="flex flex-col w-64 h-full bg-dark">
+                <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+                    <h1 class="text-xl font-bold text-white flex items-center">
+                        <i class="fas fa-robot mr-2 text-secondary"></i>
+                        Nexus AI
+                    </h1>
+                    <button id="close-mobile-menu" class="p-2 text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <button class="w-full bg-primary hover:bg-secondary text-white py-2 px-4 rounded-lg flex items-center justify-center transition">
+                        <i class="fas fa-plus mr-2"></i> Novo Chat
+                    </button>
+                </div>
+                <div class="flex-1 overflow-y-auto">
+                    <h3 class="px-4 py-2 text-sm font-semibold text-gray-400 uppercase">Chats Recentes</h3>
+                    <div class="space-y-1 px-2">
+                        <!-- Itens do histórico de chat -->
+                    </div>
+                </div>
+                <div class="p-4 border-t border-gray-800">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
+                            <img src="../images/profile.jpg" alt="Dilan B." class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium">Dilan B.</p>
+                            <p class="text-xs text-gray-400">Plano Gratuito</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Chat header -->
+            <div class="p-4 border-b border-gray-800 bg-dark flex items-center justify-between">
+                <div class="flex items-center">
+                    <button id="sidebar-toggle" class="mr-4 text-gray-400 hover:text-white md:hidden">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2 class="text-lg font-semibold" id="current-chat-title">Novo Chat</h2>
+                </div>
+                <div class="flex space-x-2">
+                    <button class="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                    <button class="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Chat messages -->
+            <div id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-6">
+                <div class="flex justify-center">
+                    <div class="max-w-3xl w-full flex flex-col items-center text-center py-8 px-4">
+                        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4">
+                            <i class="fas fa-robot text-white text-2xl"></i>
+                        </div>
+                        <h2 class="text-xl font-bold mb-2">Como posso te ajudar hoje?</h2>
+                        <p class="text-gray-400 mb-6">Pergunte qualquer coisa, ou tente um destes exemplos:</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                            <button class="suggestion-btn bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 px-4 rounded-lg text-left transition">
+                                "Explique computação quântica em termos simples"
+                            </button>
+                            <button class="suggestion-btn bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 px-4 rounded-lg text-left transition">
+                                "Escreva um poema sobre inteligência artificial"
+                            </button>
+                            <button class="suggestion-btn bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 px-4 rounded-lg text-left transition">
+                                "Como fazer uma requisição HTTP em JavaScript?"
+                            </button>
+                            <button class="suggestion-btn bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 px-4 rounded-lg text-left transition">
+                                "Qual a diferença entre IA e aprendizado de máquina?"
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input area -->
+            <div class="p-4 border-t border-gray-800">
+                <form id="chat-form" class="max-w-3xl mx-auto">
+                    <div class="relative">
+                        <input id="message-input" type="text" placeholder="Mensagem para Nexus AI..." 
+                               class="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 pr-12 focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent">
+                        <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-lg text-gray-400 hover:text-white">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 text-center">Nexus AI pode cometer erros. Considere verificar informações importantes.</p>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Model selector (hidden by default) -->
+        <div id="model-selector" class="hidden md:flex flex-col w-64 bg-dark border-l border-gray-800">
+            <div class="p-4 border-b border-gray-800">
+                <h3 class="font-semibold flex items-center">
+                    <i class="fas fa-microchip mr-2 text-accent"></i>
+                    Configurações do Modelo
+                </h3>
+            </div>
+            <div class="p-4 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Modelo de IA</label>
+                    <select class="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent">
+                        <option>Nexus Pro (Padrão)</option>
+                        <option>Nexus Turbo</option>
+                        <option>Nexus Expert</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Temperatura</label>
+                    <input type="range" min="0" max="1" step="0.1" value="0.7" 
+                           class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>Preciso</span>
+                        <span>Balanceado</span>
+                        <span>Criativo</span>
+                    </div>
+                </div>
+                <div>
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only peer" checked>
+                            <div class="w-10 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+                        </div>
+                        <span class="text-sm">Usar Navegação Web</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const chatForm = document.getElementById('chat-form');
+            const messageInput = document.getElementById('message-input');
+            const chatContainer = document.getElementById('chat-container');
+            const newChatBtn = document.getElementById('new-chat-btn');
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const closeMobileMenu = document.getElementById('close-mobile-menu');
+            const mobileSidebar = document.getElementById('mobile-sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const currentChatTitle = document.getElementById('current-chat-title');
+            const suggestionBtns = document.querySelectorAll('.suggestion-btn');
+            const modelSelector = document.getElementById('model-selector');
+            
+            // Sample chat history
+            const chatHistory = [
+                { id: 1, title: "Explicação de Promises JavaScript" },
+                { id: 2, title: "Planos de refeições saudáveis" },
+                { id: 3, title: "Recomendações de viagem" },
+                { id: 4, title: "Python vs JavaScript" }
+            ];
+            
+            // Populate chat history
+            const chatHistoryContainer = document.getElementById('chat-history');
+            chatHistory.forEach(chat => {
+                const chatItem = document.createElement('div');
+                chatItem.className = 'flex items-center p-2 rounded-lg hover:bg-gray-800 cursor-pointer transition';
+                chatItem.innerHTML = `
+                    <i class="fas fa-comment-alt mr-2 text-gray-500"></i>
+                    <span class="truncate">${chat.title}</span>
+                `;
+                chatItem.addEventListener('click', () => loadChat(chat.id));
+                chatHistoryContainer.appendChild(chatItem);
+            });
+            
+            // Toggle mobile sidebar
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileSidebar.classList.remove('hidden');
+            });
+            
+            closeMobileMenu.addEventListener('click', () => {
+                mobileSidebar.classList.add('hidden');
+            });
+            
+            sidebarToggle.addEventListener('click', () => {
+                mobileSidebar.classList.remove('hidden');
+            });
+            
+            // Handle form submission
+            chatForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const message = messageInput.value.trim();
+                if (message) {
+                    addUserMessage(message);
+                    messageInput.value = '';
+                    showTypingIndicator();
+                    
+                    // Simulate AI response after a delay
+                    setTimeout(() => {
+                        removeTypingIndicator();
+                        addAIMessage(getAIResponse(message));
+                    }, 1500);
+                }
+            });
+            
+            // Handle suggestion buttons
+            suggestionBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const suggestion = this.textContent.trim();
+                    messageInput.value = suggestion;
+                    messageInput.focus();
+                });
+            });
+            
+            // New chat button
+            newChatBtn.addEventListener('click', function() {
+                startNewChat();
+            });
+            
+            // Functions
+            function addUserMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-fade flex justify-end';
+                messageDiv.innerHTML = `
+                    <div class="max-w-3xl w-full flex items-end justify-end">
+                        <div class="bg-primary text-white rounded-xl rounded-br-none p-4 max-w-[80%]">
+                            <p>${message}</p>
+                        </div>
+                    </div>
+                `;
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                // Update chat title if this is the first message
+                if (currentChatTitle.textContent === 'Novo Chat') {
+                    const truncatedMessage = message.length > 30 ? message.substring(0, 30) + '...' : message;
+                    currentChatTitle.textContent = truncatedMessage;
+                    
+                    // Add to chat history
+                    const newChat = { id: Date.now(), title: truncatedMessage };
+                    const chatItem = document.createElement('div');
+                    chatItem.className = 'flex items-center p-2 rounded-lg hover:bg-gray-800 cursor-pointer transition';
+                    chatItem.innerHTML = `
+                        <i class="fas fa-comment-alt mr-2 text-gray-500"></i>
+                        <span class="truncate">${newChat.title}</span>
+                    `;
+                    chatItem.addEventListener('click', () => loadChat(newChat.id));
+                    chatHistoryContainer.insertBefore(chatItem, chatHistoryContainer.firstChild);
+                }
+            }
+            
+            function addAIMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-fade flex justify-start';
+                messageDiv.innerHTML = `
+                    <div class="max-w-3xl w-full flex items-start">
+                        <div class="bg-gray-800 rounded-xl rounded-bl-none p-4 max-w-[80%]">
+                            <div class="flex items-center mb-2">
+                                <div class="w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-white mr-2">
+                                    <i class="fas fa-robot text-xs"></i>
+                                </div>
+                                <span class="font-medium">Nexus AI</span>
+                            </div>
+                            <div class="ai-message-content">${message}</div>
+                            <div class="flex mt-3 space-x-3 text-gray-400 text-sm">
+                                <button class="hover:text-white">
+                                    <i class="fas fa-thumbs-up"></i>
+                                </button>
+                                <button class="hover:text-white">
+                                    <i class="fas fa-thumbs-down"></i>
+                                </button>
+                                <button class="hover:text-white">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                // Format code blocks if any
+                const codeBlocks = messageDiv.querySelectorAll('.ai-message-content code');
+                codeBlocks.forEach(block => {
+                    const pre = document.createElement('pre');
+                    pre.className = 'bg-gray-900 text-gray-300 p-3 rounded-lg overflow-x-auto text-sm my-2';
+                    pre.textContent = block.textContent;
+                    block.replaceWith(pre);
+                });
+            }
+            
+            function showTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'flex justify-start';
+                typingDiv.innerHTML = `
+                    <div class="max-w-3xl w-full flex items-start">
+                        <div class="bg-gray-800 rounded-xl rounded-bl-none p-4 max-w-[80%]">
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-white mr-2">
+                                    <i class="fas fa-robot text-xs"></i>
+                                </div>
+                                <span class="font-medium">Nexus AI</span>
+                            </div>
+                            <div class="flex mt-2">
+                                <div class="typing-dot w-2 h-2 bg-gray-400 rounded-full mx-1"></div>
+                                <div class="typing-dot w-2 h-2 bg-gray-400 rounded-full mx-1"></div>
+                                <div class="typing-dot w-2 h-2 bg-gray-400 rounded-full mx-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                typingDiv.id = 'typing-indicator';
+                chatContainer.appendChild(typingDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            
+            function removeTypingIndicator() {
+                const typingIndicator = document.getElementById('typing-indicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+            
+            function getAIResponse(message) {
+                // This is a simplified response generator
+                const responses = [
+                    "Ficarei feliz em ajudar com isso! Aqui está o que eu entendo sobre o assunto: Na maioria das linguagens de programação, incluindo JavaScript e Python, você pode criar variáveis para armazenar dados. A sintaxe difere ligeiramente entre as linguagens, mas o conceito permanece o mesmo.",
+                    "Essa é uma pergunta interessante. A abordagem dependeria de vários fatores, incluindo seu entendimento atual do assunto. Talvez possamos dividir em partes menores e mais gerenciáveis para explorar cada aspecto cuidadosamente.",
+                    "Ótima pergunta! Deixe-me explicar em termos simples. O processo envolve várias etapas, cada uma construindo sobre a anterior. Primeiro, precisamos estabelecer os princípios básicos, então podemos passar para aplicações mais complexas.",
+                    "Existem várias maneiras de abordar esse problema. O método mais comum é primeiro identificar a causa raiz do problema. Uma vez feito isso, podemos explorar soluções potenciais e avaliar cada uma com base em seus prós e contras."
+                ];
+                
+                const codeResponse = `Por exemplo, aqui está como você poderia implementar isso em código:\n\n<code>function exemplo() {
+    const dados = [1, 2, 3];
+    return dados.map(item => item * 2);
+}</code>\n\nEste é apenas um exemplo básico para ilustrar o conceito.`;
+                
+                // Randomly include a code block 50% of the time
+                return (Math.random() > 0.5) 
+                    ? responses[Math.floor(Math.random() * responses.length)] 
+                    : responses[Math.floor(Math.random() * responses.length)] + "\n\n" + codeResponse;
+            }
+            
+            function startNewChat() {
+                currentChatTitle.textContent = 'Novo Chat';
+                chatContainer.innerHTML = `
+                    <div class="flex justify-center">
+                        <div class="max-w-3xl w-full flex flex-col items-center text-center py-8 px-4">
+                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4">
+                                <i class="fas fa-robot text-white text-2xl"></i>
+                            </div>
+                            <h2 class="text-xl font-bold mb-2">Como posso te ajudar hoje?</h2>
+                            <p class="text-gray-400 mb-6">Pergunte qualquer coisa, ou tente um destes exemplos:</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
+                                <button class="suggestion-btn bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 px-4 rounded-lg text-left transition">
+                                    "Explique computação quântica em termos simples"
+                                </button>
+                                <button class="suggestion-btn bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 px-4 rounded-lg text-left transition">
+                                    "Escreva um poema sobre inteligência artificial"
+                                </button>
+                                <button class="suggestion-btn bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 px-4 rounded-lg text-left transition">
+                                    "Como fazer uma requisição HTTP em JavaScript?"
+                                </button>
+                                <button class="suggestion-btn bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 px-4 rounded-lg text-left transition">
+                                    "Qual a diferença entre IA e aprendizado de máquina?"
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Reattach event listeners to suggestion buttons
+                document.querySelectorAll('.suggestion-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const suggestion = this.textContent.trim();
+                        messageInput.value = suggestion;
+                        messageInput.focus();
+                    });
+                });
+            }
+            
+            function loadChat(chatId) {
+                // In a real app, this would load the chat from storage
+                currentChatTitle.textContent = chatHistory.find(c => c.id === chatId).title;
+                chatContainer.innerHTML = `
+                    <div class="flex items-center justify-center h-full text-gray-400">
+                        <p>Carregando histórico do chat...</p>
+                    </div>
+                `;
+                
+                // Simulate loading
+                setTimeout(() => {
+                    chatContainer.innerHTML = '';
+                    addAIMessage("Bem-vindo de volta à sua conversa anterior. Como posso continuar te ajudando com " + 
+                                 currentChatTitle.textContent + "?");
+                }, 800);
+                
+                // Close mobile sidebar if open
+                mobileSidebar.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

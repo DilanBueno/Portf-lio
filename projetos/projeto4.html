@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SuperStream | Streaming Definitivo de Super-Heróis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700&display=swap');
+        
+        :root {
+            --primary: #f44336;
+            --secondary: #2196F3;
+            --dark: #1a1a2e;
+            --light: #e6f1ff;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+        }
+        
+        .logo {
+            font-family: 'Bangers', cursive;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .hero-banner {
+            height: 70vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-video-container {
+            position: absolute;
+            width: 140%;
+            height: 0;
+            padding-bottom: 60%;
+            top: 50%;
+            left: -20%;
+            transform: translateY(-50%);
+            z-index: -1;
+        }
+        
+        .hero-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        
+        .video-card {
+            transition: transform 0.3s ease;
+            perspective: 1000px;
+        }
+        
+        .video-card:hover {
+            transform: scale(1.05) translateY(-10px);
+        }
+        
+        .video-card-inner {
+            position: relative;
+            transform-style: preserve-3d;
+        }
+        
+        .video-card:hover .video-card-inner {
+            transform: rotateY(10deg);
+        }
+        
+        .badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            z-index: 1;
+        }
+        
+        .player-container {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a1a2e;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #f44336;
+            border-radius: 10px;
+        }
+        
+        /* Animation for featured item */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(244, 67, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(244, 67, 54, 0); }
+        }
+        
+        .featured {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Mobile menu animation */
+        @keyframes slideIn {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+        
+        .mobile-menu {
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navegação -->
+    <nav class="bg-gray-900/80 backdrop-blur-md fixed w-full z-50 shadow-xl border-b border-red-500/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="#" class="text-white logo text-3xl flex items-center gap-2">
+                            <i class="fas fa-bolt text-yellow-400"></i> SuperStream
+                        </a>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <a href="#" class="text-white hover:bg-red-600 px-3 py-2 rounded-md text-sm font-medium transition-all">Início</a>
+                            <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-all">Filmes</a>
+                            <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-all">Séries</a>
+                            <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-all">Heróis</a>
+                            <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-all">Vilões</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-4 flex items-center md:ml-6">
+                        <div class="relative mx-4">
+                            <input type="text" placeholder="Buscar heróis..." class="bg-gray-800 text-white px-4 py-1 rounded-full w-64 focus:outline-none focus:ring-2 focus:ring-red-500">
+                            <button class="absolute right-3 top-1 text-gray-400 hover:text-white">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                        <button class="p-1 rounded-full text-gray-400 hover:text-white focus:outline-none">
+                            <i class="fas fa-bell text-xl"></i>
+                        </button>
+                        <div class="ml-3 relative">
+                            <div class="flex items-center cursor-pointer">
+                                <span class="text-white mr-2">Dilan B.</span>
+                                <img class="h-8 w-8 rounded-full border-2 border-red-500" src="/images/foto de perfil 3.png" alt="Avatar do usuário">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="-mr-2 flex md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Menu móvel -->
+        <div id="mobile-menu" class="hidden md:hidden bg-gray-900 mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#" class="text-white block px-3 py-2 rounded-md text-base font-medium">Início</a>
+                <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Filmes</a>
+                <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Séries</a>
+                <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Heróis</a>
+                <a href="#" class="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Vilões</a>
+            </div>
+            <div class="pt-4 pb-3 border-t border-gray-700">
+                <div class="flex items-center px-5">
+                    <div class="flex-shrink-0">
+                        <img class="h-10 w-10 rounded-full" src="https://randomuser.me/api/portraits/men/32.jpg" alt="">
+                    </div>
+                    <div class="ml-3">
+                        <div class="text-base font-medium text-white">FãDeHerói</div>
+                        <div class="text-sm font-medium text-gray-400">fandeheroi@example.com</div>
+                    </div>
+                    <button class="ml-auto flex-shrink-0 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none">
+                        <i class="fas fa-bell text-xl"></i>
+                    </button>
+                </div>
+                <div class="mt-3 px-2 space-y-1">
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-400 hover:text-white hover:bg-gray-700">Seu Perfil</a>
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-400 hover:text-white hover:bg-gray-700">Configurações</a>
+                    <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-gray-400 hover:text-white hover:bg-gray-700">Sair</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Banner de Heróis -->
+    <div class="hero-banner flex items-center pt-16">
+        <div class="hero-overlay"></div>
+        <div class="hero-video-container">
+            <iframe class="hero-video" src="https://www.youtube.com/embed/mqqft2x_Aa4?autoplay=1&mute=1&loop=1&playlist=mqqft2x_Aa4&controls=0&showinfo=0&modestbranding=1&rel=0&iv_load_policy=3&vq=hd1080" frameborder="0" allowfullscreen></iframe>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="max-w-lg">
+                <h1 class="text-5xl font-bold text-white mb-4 logo">A Experiência Definitiva de Heróis</h1>
+                <p class="text-gray-300 mb-8 text-lg">Transmissão ilimitada dos maiores filmes e séries de super-heróis do multiverso. Somente na SuperStream.</p>
+                <div class="flex flex-wrap gap-4">
+                    <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all transform hover:scale-105">
+                        <i class="fas fa-play"></i> Assistir Agora
+                    </button>
+                    <button class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-full font-semibold flex items-center gap-2 transition-all transform hover:scale-105">
+                        <i class="fas fa-info-circle"></i> Mais Informações
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Conteúdo em Destaque -->
+        <section class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-star text-yellow-400"></i> Em Destaque Hoje
+                </h2>
+                <a href="#" class="text-gray-400 hover:text-white font-medium">Ver Tudo <i class="fas fa-chevron-right ml-1"></i></a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="video-card relative bg-gray-800 rounded-lg overflow-hidden shadow-xl featured">
+                    <div class="video-card-inner">
+                        <img src="https://m.media-amazon.com/images/M/MV5BMTc5MDE2ODcwNV5BMl5BanBnXkFtZTgwMzI2NzQ2NzM@._V1_.jpg" alt="Poster do filme" class="w-full h-64 object-cover">
+                        <div class="absolute top-0 left-0 bg-gradient-to-b from-black to-transparent w-full h-20"></div>
+                        <div class="absolute top-0 right-0 p-4">
+                            <span class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">NOVO</span>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-white font-bold text-lg">Vingadores: Ultimato</h3>
+                                <div class="flex items-center text-yellow-400">
+                                    <i class="fas fa-star"></i>
+                                    <span class="ml-1 text-white">4.9</span>
+                                </div>
+                            </div>
+                            <p class="text-gray-400 text-sm mt-1">2019 • 3h 1m • Ação, Ficção Científica</p>
+                            <p class="text-gray-300 text-sm mt-3 line-clamp-2">Os Vingadores se reúnem para desfazer as ações de Thanos e restaurar o equilíbrio no universo...</p>
+                            <div class="flex gap-2 mt-4">
+                                <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-full text-sm font-medium transition-all">Assistir</button>
+                                <button class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded-full text-sm font-medium transition-all">+ Lista</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="video-card relative bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+                    <div class="video-card-inner">
+                        <img src="https://m.media-amazon.com/images/M/MV5BZWMyYzFjYTYtNTRjYi00OGExLWE2YzgtOGRmYjAxZTU3NzBiXkEyXkFqcGdeQXVyMzQ0MzA0NTM@._V1_FMjpg_UX1000_.jpg" alt="Poster do filme" class="w-full h-64 object-cover">
+                        <div class="absolute top-0 left-0 bg-gradient-to-b from-black to-transparent w-full h-20"></div>
+                        <div class="p-4">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-white font-bold text-lg">Homem-Aranha: Sem Volta Para Casa</h3>
+                                <div class="flex items-center text-yellow-400">
+                                    <i class="fas fa-star"></i>
+                                    <span class="ml-1 text-white">4.8</span>
+                                </div>
+                            </div>
+                            <p class="text-gray-400 text-sm mt-1">2021 • 2h 28m • Ação, Aventura</p>
+                            <p class="text-gray-300 text-sm mt-3 line-clamp-2">Peter Parker pede ajuda ao Doutor Estranho quando sua identidade é revelada ao mundo...</p>
+                            <div class="flex gap-2 mt-4">
+                                <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-full text-sm font-medium transition-all">Assistir</button>
+                                <button class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded-full text-sm font-medium transition-all">+ Lista</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="video-card relative bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+                    <div class="video-card-inner">
+                        <img src="https://beam-images.warnermediacdn.com/BEAM_LWM_DELIVERABLES/dfa50804-e6f6-4fa2-a732-693dbc50527b/e5ef7f60937f2fd5b1ace0ba9006424540141380.jpg?host=wbd-images.prod-vod.h264.io&partner=beamcom" alt="Poster do filme O Batman" class="w-full h-64 object-cover">
+                        <div class="absolute top-0 right-0 p-4">
+                            <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded">EM TREND</span>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-white font-bold text-lg">O Batman</h3>
+                                <div class="flex items-center text-yellow-400">
+                                    <i class="fas fa-star"></i>
+                                    <span class="ml-1 text-white">4.7</span>
+                                </div>
+                            </div>
+                            <p class="text-gray-400 text-sm mt-1">2022 • 2h 56m • Ação, Crime</p>
+                            <p class="text-gray-300 text-sm mt-3 line-clamp-2">Batman investiga a corrupção em Gotham City enquanto persegue o Charada...</p>
+                            <div class="flex gap-2 mt-4">
+                                <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-full text-sm font-medium transition-all">Assistir</button>
+                                <button class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-1 rounded-full text-sm font-medium transition-all">+ Lista</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Coleção da Marvel -->
+        <section class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Marvel_Logo.svg/2560px-Marvel_Logo.svg.png" alt="Logotipo da Marvel" class="h-6">
+                    Coleção
+                </h2>
+                <a href="#" class="text-gray-400 hover:text-white font-medium">Ver Tudo <i class="fas fa-chevron-right ml-1"></i></a>
+            </div>
+            
+            <div class="relative">
+                <div id="marvel-slider" class="flex gap-4 overflow-x-auto pb-4 scroll-smooth">
+                    <!-- Item 1 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://m.media-amazon.com/images/M/MV5BNDYxNjQyMjAtNTdiOS00NGYwLWFmNTAtNThmYjU5ZGI2YTI1XkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_.jpg" alt="Poster do filme" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">Vingadores: Guerra Infinita</h3>
+                                <p class="text-gray-400 text-xs mt-1">2018 • Ação, Ficção Científica</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 2 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://m.media-amazon.com/images/M/MV5BMjMwNDkxMTgzOF5BMl5BanBnXkFtZTgwNTkwNTQ3NjM@._V1_.jpg" alt="Poster do filme" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">homem aranha no aranhaverso</h3>
+                                <p class="text-gray-400 text-xs mt-1">2008 • Ação, Ficção Científica</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 3 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://disney.images.edge.bamgrid.com/ripcut-delivery/v2/variant/disney/e948eb00-c99c-48b0-863b-8334a7c965ec/compose?aspectRatio=1.78&format=webp&width=1200" alt="Poster do Capitão América: O Soldado Invernal" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">Capitão América: O Soldado Invernal</h3>
+                                <p class="text-gray-400 text-xs mt-1">2014 • Ação, Aventura</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 4 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://image.tmdb.org/t/p/w500/9gm3lL8JMTTmc3W4BmNMCuRLdL8.jpg" alt="Poster dos Guardiões da Galáxia" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">Guardiões da Galáxia</h3>
+                                <p class="text-gray-400 text-xs mt-1">2014 • Ação, Comédia</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 5 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://m.media-amazon.com/images/M/MV5BMTg1MTY2MjYzNV5BMl5BanBnXkFtZTgwMTc4NTMwNDI@._V1_.jpg" alt="Poster do filme" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">Pantera Negra</h3>
+                                <p class="text-gray-400 text-xs mt-1">2018 • Ação, Drama</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 6 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://m.media-amazon.com/images/M/MV5BMjMyNDkzMzI1OF5BMl5BanBnXkFtZTgwODcxODg5MjI@._V1_.jpg" alt="Poster do filme" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">Thor: Ragnarok</h3>
+                                <p class="text-gray-400 text-xs mt-1">2017 • Ação, Comédia</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="marvel-prev" class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700/90 text-white rounded-full w-10 h-10 flex items-center justify-center z-10 focus:outline-none">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="marvel-next" class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700/90 text-white rounded-full w-10 h-10 flex items-center justify-center z-10 focus:outline-none">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+        
+        <!-- Coleção da DC -->
+        <section class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/DC_Comics_logo.svg/1280px-DC_Comics_logo.svg.png" alt="Logotipo da DC" class="h-6">
+                    Coleção
+                </h2>
+                <a href="#" class="text-gray-400 hover:text-white font-medium">Ver Tudo <i class="fas fa-chevron-right ml-1"></i></a>
+            </div>
+            
+            <div class="relative">
+                <div id="dc-slider" class="flex gap-4 overflow-x-auto pb-4 scroll-smooth">
+                    <!-- Item 1 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://br.web.img2.acsta.net/c_310_420/pictures/21/06/22/22/19/1495362.jpg" alt="Poster do filme Esquadrão Suicida" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">Esquadrão Suicida</h3>
+                                <p class="text-gray-400 text-xs mt-1">2021 • Ação</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 2 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://br.web.img3.acsta.net/pictures/20/06/23/20/57/4275033.jpg" alt="Poster do filme" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">Mulher-Maravilha 1984</h3>
+                                <p class="text-gray-400 text-xs mt-1">2020 • Fantasia</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 3 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://upload.wikimedia.org/wikipedia/pt/6/63/Black_Adam_poster.jpg" alt="Poster do filme Black Adam" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">Black Adam</h3>
+                                <p class="text-gray-400 text-xs mt-1">2022 • Ação</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 4 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://super.abril.com.br/wp-content/uploads/2020/05/si_justice_league_hbo.jpg?quality=70&strip=info&crop=1&resize=1080,565" alt="Poster da Liga da Justiça" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">Liga da Justiça</h3>
+                                <p class="text-gray-400 text-xs mt-1">2021 • Ação</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 5 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://upload.wikimedia.org/wikipedia/pt/3/32/Superman_%282025_film%29_poster.jpg" alt="Poster do filme Superman: Legacy" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">Superman: Legacy</h3>
+                                <p class="text-gray-400 text-xs mt-1">2022 • Ação</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Item 6 -->
+                    <div class="video-card flex-shrink-0 w-48 sm:w-56 md:w-64">
+                        <div class="video-card-inner bg-gray-800 rounded-lg overflow-hidden shadow-lg">
+                            <img src="https://ingresso-a.akamaihd.net/img/cinema/cartaz/23041-cartaz.jpg" alt="Poster do filme" class="w-full h-40 object-cover">
+                            <div class="p-4">
+                                <h3 class="text-white font-bold text-sm truncate">Aves de Rapina</h3>
+                                <p class="text-gray-400 text-xs mt-1">2020 • Ação</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button id="dc-prev" class="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700/90 text-white rounded-full w-10 h-10 flex items-center justify-center z-10 focus:outline-none">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="dc-next" class="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-800/80 hover:bg-gray-700/90 text-white rounded-full w-10 h-10 flex items-center justify-center z-10 focus:outline-none">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Reprodutor de Vídeo (oculto por padrão) -->
+    <div id="video-player" class="fixed inset-0 z-50 hidden player-container">
+        <div class="absolute inset-0 bg-black/90 flex items-center justify-center">
+            <button id="close-player" class="absolute top-4 right-4 text-white text-2xl hover:text-red-500">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="w-full max-w-4xl px-4">
+                <div class="aspect-w-16 aspect-h-9 bg-black">
+                    <!-- Vídeo iria aqui -->
+                    <div class="w-full h-full flex items-center justify-center">
+                        <div class="text-center">
+                            <i class="fas fa-play-circle text-red-500 text-6xl mb-4"></i>
+                            <h3 class="text-white text-2xl font-bold">Agora Assistindo: Guardiões da Galáxia</h3>
+                            <p class="text-gray-400 mt-2">Pronto para reproduzir essa aventura épica no espaço</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-900 p-4 rounded-b-lg">
+                    <h3 class="text-white font-bold text-xl">Guardiões da Galáxia</h3>
+                    <div class="flex flex-wrap items-center gap-4 mt-2">
+                        <span class="text-yellow-400 flex items-center">
+                            <i class="fas fa-star mr-1"></i> 4.8
+                        </span>
+                        <span class="text-gray-400">2023</span>
+                        <span class="text-gray-400">2h 32m</span>
+                        <span class="text-gray-400">HD</span>
+                    </div>
+                    <p class="text-gray-300 mt-3">Os Guardiões lutam para manter a equipe unida enquanto lidam com problemas familiares pessoais...</p>
+                    <div class="flex gap-3 mt-4">
+                        <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-medium flex items-center gap-2">
+                            <i class="fas fa-play"></i> Reproduzir
+                        </button>
+                        <button class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2 rounded-full font-medium flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Minha Lista
+                        </button>
+                        <button class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-full font-medium flex items-center gap-2">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rodapé -->
+    <footer class="bg-gray-900/80 text-gray-400 py-12 ">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-white font-bold text-lg mb-4">SuperStream</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-white transition-colors">Sobre Nós</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Carreiras</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Contato</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Central de Ajuda</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-white font-bold text-lg mb-4">Jurídico</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-white transition-colors">Termos de Serviço</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Política de Privacidade</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Política de Cookies</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Direitos Autorais</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-white font-bold text-lg mb-4">Guia de Heróis</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-white transition-colors">Universo da Marvel</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Universo da DC</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Quadrinhos Indie</a></li>
+                        <li><a href="#" class="hover:text-white transition-colors">Ordem de Visualização</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-white font-bold text-lg mb-4">Conecte-se</h3>
+                    <div class="flex space-x-4 mb-4">
+                        <a href="#" class="text-gray-400 hover:text-white text-xl"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white text-xl"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white text-xl"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-gray-400 hover:text-white text-xl"><i class="fab fa-youtube"></i></a>
+                    </div>
+                    <p class="text-sm">Assine nossa newsletter para atualizações de heróis!</p>
+                    <div class="mt-2 flex">
+                        <input type="email" placeholder="Seu e-mail" class="bg-gray-800 text-white px-3 py-2 rounded-l-md focus:outline-none focus:ring-1 focus:ring-red-500 w-full text-sm">
+                        <button class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-r-md text-sm">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
+                <p>&copy; 2023 SuperStream. Todos os direitos reservados. Super-heróis são marcas registradas de seus respectivos proprietários.</p>
+                <p class="mt-2">Feito com <i class="fas fa-heart text-red-500"></i> para fãs de super-heróis</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Alternar menu móvel
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+
+        // Exibir/ocultar reprodutor de vídeo
+        // Corrigindo seleção dos botões (querySelectorAll não suporta :contains)
+        function getWatchButtons() {
+            const btns = Array.from(document.querySelectorAll('button'));
+            return btns.filter(btn => btn.textContent.includes('Assistir') || btn.textContent.includes('Reproduzir'));
+        }
+        const watchButtons = getWatchButtons();
+        const videoPlayer = document.getElementById('video-player');
+        const closePlayer = document.getElementById('close-player');
+        if (watchButtons.length && videoPlayer && closePlayer) {
+            watchButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    videoPlayer.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                });
+            });
+            closePlayer.addEventListener('click', () => {
+                videoPlayer.classList.add('hidden');
+                document.body.style.overflow = '';
+            });
+        }
+
+        // Navegação do carrossel para a seção da Marvel
+        const marvelSlider = document.getElementById('marvel-slider');
+        const marvelPrev = document.getElementById('marvel-prev');
+        const marvelNext = document.getElementById('marvel-next');
+        if (marvelSlider && marvelPrev && marvelNext) {
+            marvelPrev.addEventListener('click', () => {
+                marvelSlider.scrollBy({ left: -300, behavior: 'smooth' });
+            });
+            marvelNext.addEventListener('click', () => {
+                marvelSlider.scrollBy({ left: 300, behavior: 'smooth' });
+            });
+        }
+
+        // Navegação do carrossel para a seção da DC
+        const dcSlider = document.getElementById('dc-slider');
+        const dcPrev = document.getElementById('dc-prev');
+        const dcNext = document.getElementById('dc-next');
+        if (dcSlider && dcPrev && dcNext) {
+            dcPrev.addEventListener('click', () => {
+                dcSlider.scrollBy({ left: -300, behavior: 'smooth' });
+            });
+            dcNext.addEventListener('click', () => {
+                dcSlider.scrollBy({ left: 300, behavior: 'smooth' });
+            });
+        }
+    });
+    </script>
+</body>
+</html>

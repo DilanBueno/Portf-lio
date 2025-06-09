@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clone do Spotify</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #535353;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b3b3b3;
+        }
+        
+        /* Pulse animation for play button */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Blinking animation for lyrics */
+        @keyframes blink {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+        .blinking {
+            animation: blink 1s ease infinite alternate;
+        }
+        
+        #volumeBarContainer:hover #volumeHandle {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-black text-white font-sans overflow-hidden">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="hidden md:flex md:w-60 lg:w-80 flex-col bg-black p-3 space-y-6 border-r border-gray-800">
+            <div class="flex items-center justify-start space-x-3 p-2">
+                <i class="fas fa-music text-4xl text-green-500"></i>
+                <span class="text-xl font-bold">Music</span>
+            </div>
+            
+            <div class="space-y-1">
+                <a href="#" class="flex items-center space-x-3 p-2 rounded bg-gray-900">
+                    <i class="fas fa-home text-xl text-white"></i>
+                    <span class="font-medium">Início</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 p-2 rounded hover:bg-gray-900">
+                    <i class="fas fa-search text-xl text-gray-400"></i>
+                    <span class="font-medium">Buscar</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 p-2 rounded hover:bg-gray-900">
+                    <i class="fas fa-book text-xl text-gray-400"></i>
+                    <span class="font-medium">Sua Biblioteca</span>
+                </a>
+            </div>
+            
+            <div class="space-y-1">
+                <div class="p-2">
+                    <button class="flex items-center justify-center space-x-2 bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded-full w-full">
+                        <i class="fas fa-plus"></i>
+                        <span>Criar Playlist</span>
+                    </button>
+                </div>
+                <div class="p-2">
+                    <button class="flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-600 to-blue-500 text-white px-3 py-2 rounded-full w-full">
+                        <i class="fas fa-heart"></i>
+                        <span>Músicas Curtidas</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 pt-3 mt-3">
+                <div class="space-y-2 h-64 overflow-y-auto scrollbar-hide">
+                    <a href="#" class="block text-gray-400 hover:text-white px-2">Vibes Calmas</a>
+                    <a href="#" class="block text-gray-400 hover:text-white px-2">Mix de Treino</a>
+                    <a href="#" class="block text-gray-400 hover:text-white px-2">Fluxo de Foco</a>
+                    <a href="#" class="block text-gray-400 hover:text-white px-2">Rebobinando 2023</a>
+                    <a href="#" class="block text-gray-400 hover:text-white px-2">Dia Chuvoso</a>
+                    <a href="#" class="block text-gray-400 hover:text-white px-2">Café da Manhã</a>
+                    <a href="#" class="block text-gray-400 hover:text-white px-2">Viagem de Carro</a>
+                    <a href="#" class="block text-gray-400 hover:text-white px-2">Dormir Tranquilo</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="flex items-center justify-between px-4 md:px-6 py-4 bg-gradient-to-b from-gray-900 to-black">
+                <div class="flex items-center space-x-4">
+                    <button class="md:hidden text-white">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div class="hidden md:flex space-x-2">
+                        <button class="bg-black text-white rounded-full p-2 hover:bg-gray-800">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="bg-black text-white rounded-full p-2 hover:bg-gray-800">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="relative md:w-64 lg:w-96">
+                    <input type="text" placeholder="O que você quer ouvir?" class="w-full bg-white text-black px-4 py-2 rounded-full pl-10 focus:outline-none">
+                    <i class="fas fa-search absolute left-3 top-3 text-gray-900"></i>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="bg-white text-black rounded-full px-4 py-1 font-bold hover:bg-gray-200 text-sm hidden md:block">
+                        Atualizar
+                    </button>
+                    <button class="flex items-center justify-center space-x-2 bg-black hover:bg-gray-800 rounded-full p-1">
+                        <img src="/images/foto de perfil 3.png" class="w-8 h-8 rounded-full" alt="Perfil">
+                        <span class="hidden lg:block">Perfil</span>
+                        <i class="fas fa-chevron-down text-xs hidden lg:block"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <main class="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-gray-900 to-black">
+                <div class="mb-6">
+                    <h1 class="text-3xl font-bold mb-6">Boa tarde</h1>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Playlist Cards -->
+                        <div class="bg-gray-800 bg-opacity-40 hover:bg-gray-700 transition rounded flex items-center overflow-hidden cursor-pointer">
+                            <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500"></div>
+                            <div class="ml-4 font-bold">Mix Diário 1</div>
+                            <div class="ml-auto mr-4 opacity-0 group-hover:opacity-100 transform transition hover:scale-110">
+                                <i class="fas fa-play text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 bg-opacity-40 hover:bg-gray-700 transition rounded flex items-center overflow-hidden cursor-pointer">
+                            <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-500"></div>
+                            <div class="ml-4 font-bold">Descobertas da Semana</div>
+                            <div class="ml-auto mr-4 opacity-0 group-hover:opacity-100 transform transition hover:scale-110">
+                                <i class="fas fa-play text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 bg-opacity-40 hover:bg-gray-700 transition rounded flex items-center overflow-hidden cursor-pointer">
+                            <div class="w-16 h-16 bg-gradient-to-br from-pink-500 to-red-500"></div>
+                            <div class="ml-4 font-bold">Vibes Calmas</div>
+                            <div class="ml-auto mr-4 opacity-0 group-hover:opacity-100 transform transition hover:scale-110">
+                                <i class="fas fa-play text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 bg-opacity-40 hover:bg-gray-700 transition rounded flex items-center overflow-hidden cursor-pointer">
+                            <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500"></div>
+                            <div class="ml-4 font-bold">Sucessos 2023</div>
+                            <div class="ml-auto mr-4 opacity-0 group-hover:opacity-100 transform transition hover:scale-110">
+                                <i class="fas fa-play text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 bg-opacity-40 hover:bg-gray-700 transition rounded flex items-center overflow-hidden cursor-pointer">
+                            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-500"></div>
+                            <div class="ml-4 font-bold">Mix de Treino</div>
+                            <div class="ml-auto mr-4 opacity-0 group-hover:opacity-100 transform transition hover:scale-110">
+                                <i class="fas fa-play text-white text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="bg-gray-800 bg-opacity-40 hover:bg-gray-700 transition rounded flex items-center overflow-hidden cursor-pointer">
+                            <div class="w-16 h-16 bg-gradient-to-br from-gray-500 to-black"></div>
+                            <div class="ml-4 font-bold">Dormir Tranquilo</div>
+                            <div class="ml-auto mr-4 opacity-0 group-hover:opacity-100 transform transition hover:scale-110">
+                                <i class="fas fa-play text-white text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-24">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold">Feito Para Você</h2>
+                        <a href="#" class="text-sm text-gray-400 hover:underline">Ver tudo</a>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-6">
+                        <!-- Album Cards -->
+                        <div class="group cursor-pointer">
+                            <div class="relative mb-3">
+                                <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" alt="Album" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                                <div class="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition transform translate-y-3 group-hover:translate-y-0 shadow-lg animate-pulse">
+                                    <i class="fas fa-play text-xl text-black"></i>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-white truncate">Curtidas da Rádio</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Por Music</p>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <div class="relative mb-3">
+                                <img src="https://images.unsplash.com/photo-1496293455970-f8581aae0e3b?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" alt="Album" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                                <div class="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition transform translate-y-3 group-hover:translate-y-0 shadow-lg animate-pulse">
+                                    <i class="fas fa-play text-xl text-black"></i>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-white truncate">Top Hits Atuais</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Por Music</p>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <div class="relative mb-3">
+                                <img src="https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Album" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                                <div class="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition transform translate-y-3 group-hover:translate-y-0 shadow-lg animate-pulse">
+                                    <i class="fas fa-play text-xl text-black"></i>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-white truncate">Elevador de Humor</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Comece seu dia com...</p>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <div class="relative mb-3">
+                                <img src="https://images.unsplash.com/photo-1619983081563-430f63602796?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Album" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                                <div class="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition transform translate-y-3 group-hover:translate-y-0 shadow-lg animate-pulse">
+                                    <i class="fas fa-play text-xl text-black"></i>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-white truncate">RapCaviar</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Por Music</p>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <div class="relative mb-3">
+                                <img src="https://images.unsplash.com/photo-1501612780327-45045538702b?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" alt="Album" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                                <div class="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition transform translate-y-3 group-hover:translate-y-0 shadow-lg animate-pulse">
+                                    <i class="fas fa-play text-xl text-black"></i>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-white truncate">Clássicos do Rock</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Lendas do rock e músicas épicas...</p>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <div class="relative mb-3">
+                                <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" alt="Album" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                                <div class="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition transform translate-y-3 group-hover:translate-y-0 shadow-lg animate-pulse">
+                                    <i class="fas fa-play text-xl text-black"></i>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-white truncate">Piano Relaxante</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Relaxe e aproveite com belas...</p>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <div class="relative mb-3">
+                                <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" alt="Album" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                                <div class="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition transform translate-y-3 group-hover:translate-y-0 shadow-lg animate-pulse">
+                                    <i class="fas fa-play text-xl text-black"></i>
+                                </div>
+                            </div>
+                            <h3 class="font-bold text-white truncate">Foco Profundo</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Mantenha a calma e foque com...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-12">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-2xl font-bold">Tocados Recentemente</h2>
+                        <a href="#" class="text-sm text-gray-400 hover:underline">Ver tudo</a>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                        <!-- Recent Cards -->
+                        <div class="group cursor-pointer">
+                            <img src="https://i.ytimg.com/vi/_FrOQC-zEog/hqdefault.jpg?sqp=-oaymwEmCOADEOgC8quKqQMa8AEB-AH-BIAC4AOKAgwIABABGH8gLygTMA8=&rs=AOn4CLCsfKVjGRlQNrX6J51-nJv_O5sq2A" alt="Recent" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                            <h3 class="font-bold text-white mt-2 truncate">Comfortably Numb</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Música • Pink Floyd</p>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <img src="https://i.scdn.co/image/ab67616d0000b273fbc71c99f9c1296c56dd51b6" alt="Recent" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                            <h3 class="font-bold text-white mt-2 truncate">Smells Like Teen Spirit</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Música • Nirvana</p>
+                        </div>
+                        <div class="group cursor-pointer">
+                                <img src="https://imusic.b-cdn.net/images/item/original/399/0803341301399.jpg?motorhead-2016-motorhead-lp&class=scaled&v=1398358730" alt="Recent" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                                <div class="absolute bottom-2 right-2 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition transform translate-y-3 group-hover:translate-y-0 shadow-lg animate-pulse">
+                                    <i class="fas fa-play text-xl text-black"></i>
+                            </div>
+                            <h3 class="font-bold text-white mt-2 truncate">Ace of Spades</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Música • Motörhead</p>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <img src="https://i.scdn.co/image/ab67616d0000b2735d48e2f56d691f9a4e4b0bdf" alt="Bollywood" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                            <h3 class="font-bold text-white mt-2 truncate">Wish You Were Here</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Música • Pink Floyd</p>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <img src="https://i.scdn.co/image/ab67616d0000b273fbc71c99f9c1296c56dd51b6" alt="Recent" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                            <h3 class="font-bold text-white mt-2 truncate">Come As You Are</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Música • Nirvana</p>
+                        </div>
+                        <div class="group cursor-pointer">
+                            <img src="https://imusic.b-cdn.net/images/item/original/399/0803341301399.jpg?motorhead-2016-motorhead-lp&class=scaled&v=1398358730" alt="Anos 2010" class="rounded-md shadow-lg w-full aspect-square object-cover">
+                            <h3 class="font-bold text-white mt-2 truncate">Overkill</h3>
+                            <p class="text-gray-400 text-sm mt-1 truncate">Música • Motörhead</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        
+    </div>
+
+
+    
+    <!-- Player Bar -->
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 px-4 py-2 flex flex-col">
+        <div class="flex items-center justify-between">
+            <!-- Song Info -->
+            <div class="flex items-center space-x-3 w-1/4 min-w-[200px]">
+                <img src="https://i.ytimg.com/vi/_FrOQC-zEog/hqdefault.jpg?sqp=-oaymwEmCOADEOgC8quKqQMa8AEB-AH-BIAC4AOKAgwIABABGH8gLygTMA8=&rs=AOn4CLCsfKVjGRlQNrX6J51-nJv_O5sq2A" alt="Current" class="w-14 h-14 rounded">
+                <div>
+                    <h4 class="font-medium text-sm text-white truncate">Comfortably Numb</h4>
+                    <p class="text-gray-400 text-xs truncate">Pink Floyd</p>
+                </div>
+                <button class="text-gray-400 hover:text-white">
+                    <i class="far fa-heart"></i>
+                </button>
+            </div>
+            
+            <!-- Player Controls -->
+            <div class="flex flex-col items-center justify-center w-1/2">
+                <div class="flex items-center space-x-6 mb-2">
+                    <button class="text-gray-400 hover:text-white text-lg">
+                        <i class="fas fa-random"></i>
+                    </button>
+                    <button class="text-gray-400 hover:text-white text-xl">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <button class="bg-white text-black rounded-full w-8 h-8 flex items-center justify-center hover:scale-105 transform transition">
+                        <i class="fas fa-play text-sm"></i>
+                    </button>
+                    <button class="text-gray-400 hover:text-white text-xl">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                    <button class="text-gray-400 hover:text-white text-lg">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+                <div class="w-full flex items-center space-x-3">
+                    <span class="text-xs text-gray-400">1:23</span>
+                    <div class="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
+                        <div class="bg-gray-400 h-full w-1/3 rounded-full relative">
+                            <div class="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 hover:opacity-100"></div>
+                        </div>
+                    </div>
+                    <span class="text-xs text-gray-400">3:45</span>
+                </div>
+            </div>
+            
+            <!-- Volume & Other Controls -->
+            <div class="flex items-center justify-end space-x-3 w-1/4 min-w-[200px]">
+                <button class="text-gray-400 hover:text-white">
+                    <i class="fas fa-list-ol"></i>
+                </button>
+                <button class="text-gray-400 hover:text-white">
+                    <i class="fas fa-desktop"></i>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <button class="text-gray-400 hover:text-white">
+                        <i class="fas fa-volume-up" id="volumeIcon"></i>
+                    </button>
+                    <div class="w-20 h-1 bg-gray-700 rounded-full overflow-hidden cursor-pointer relative" id="volumeBarContainer">
+                        <div class="bg-gray-400 h-full rounded-full relative" id="volumeBar" style="width: 75%">
+                            <div class="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-white rounded-full opacity-0 transition-opacity duration-200" 
+                                 id="volumeHandle"
+                                 style="margin-right: -6px"></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="text-gray-400 hover:text-white">
+                    <i class="fas fa-expand-alt"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Lyrics Mode (hidden by default) -->
+        <div class="mt-4 hidden">
+            <div class="text-center">
+                <p class="text-lg">Nada mais se compara</p>
+                <p class="text-xl font-bold my-2 blinking">Não consigo te ver brilhando através do meu...</p>
+                <p class="text-lg">Escuro o suficiente para algo crescer</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate play/pause functionality
+        const playButton = document.querySelector('.bg-white');
+        playButton.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('fa-play')) {
+                icon.classList.remove('fa-play');
+                icon.classList.add('fa-pause');
+                icon.classList.add('blinking');
+            } else {
+                icon.classList.add('fa-play');
+                icon.classList.remove('fa-pause');
+                icon.classList.remove('blinking');
+            }
+        });
+        
+        // Mobile sidebar toggle
+        const mobileMenuButton = document.querySelector('button.md\\:hidden');
+        const sidebar = document.querySelector('.md\\:hidden');
+        
+        mobileMenuButton.addEventListener('click', function() {
+            sidebar.classList.toggle('hidden');
+        });
+        
+        // Simulate hover effect on playlist cards
+        document.querySelectorAll('.group').forEach(group => {
+            group.addEventListener('mouseenter', function() {
+                this.querySelector('.opacity-0').classList.remove('opacity-0');
+            });
+            group.addEventListener('mouseleave', function() {
+                this.querySelector('.opacity-100').classList.add('opacity-0');
+            });
+        });
+        
+        // Current song animation
+        setInterval(() => {
+            const currentlyPlaying = document.querySelector('.blinking');
+            if (currentlyPlaying) {
+                currentlyPlaying.style.opacity = Math.random() * 0.5 + 0.5;
+            }
+        }, 1000);
+        
+        // Volume control functionality
+        const volumeBar = document.getElementById('volumeBar');
+        const volumeBarContainer = document.getElementById('volumeBarContainer');
+        const volumeIcon = document.getElementById('volumeIcon');
+
+        let volume = 0.75; // Default volume (matches initial width of 3/4)
+
+        // Click or drag on volume bar
+        volumeBarContainer.addEventListener('mousedown', (e) => {
+            updateVolume(e);
+            
+            const mouseMoveHandler = (e) => updateVolume(e);
+            const mouseUpHandler = () => {
+                document.removeEventListener('mousemove', mouseMoveHandler);
+                document.removeEventListener('mouseup', mouseUpHandler);
+            };
+            
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+        });
+
+        function updateVolume(e) {
+            const rect = volumeBarContainer.getBoundingClientRect();
+            let pos = (e.clientX - rect.left) / rect.width;
+            pos = Math.max(0, Math.min(1, pos)); // Clamp between 0-1
+            
+            volume = pos;
+            volumeBar.style.width = `${volume * 100}%`;
+            
+            // Update icon based on volume level
+            if (volume === 0) {
+                volumeIcon.className = 'fas fa-volume-mute';
+            } else if (volume < 0.5) {
+                volumeIcon.className = 'fas fa-volume-down';
+            } else {
+                volumeIcon.className = 'fas fa-volume-up';
+            }
+        }
+    </script>
+</body>
+</html>
